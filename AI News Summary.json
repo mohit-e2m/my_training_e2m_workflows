@@ -9,7 +9,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
       "typeVersion": 1,
       "position": [
-        680,
+        688,
         544
       ],
       "id": "8b095700-3ee4-4f69-85aa-1f75bd7d5c22",
@@ -151,7 +151,7 @@
       "typeVersion": 2.3,
       "position": [
         672,
-        740
+        752
       ],
       "id": "721c616a-d3e7-475b-b038-3733c6fb3a2a",
       "name": "If AI Content"
@@ -173,7 +173,7 @@
       "typeVersion": 2,
       "position": [
         960,
-        668
+        672
       ],
       "id": "53620038-9e9f-4493-85a3-f4b502939716",
       "name": "Insert into Word",
@@ -201,7 +201,7 @@
       "typeVersion": 2.4,
       "position": [
         1184,
-        740
+        752
       ],
       "id": "3713d41e-65d8-479e-9d22-d9968e410b84",
       "name": "Alert for AI",
@@ -230,7 +230,7 @@
       "typeVersion": 2.4,
       "position": [
         960,
-        424
+        432
       ],
       "id": "9ce4ab62-44bb-4536-a575-af619ce24ca2",
       "name": "Send the summary",
@@ -267,7 +267,7 @@
     },
     {
       "parameters": {
-        "content": "## For Dynamic link\n",
+        "content": "## For Dynamic link with SERP API\n",
         "height": 288,
         "width": 464
       },
@@ -292,6 +292,50 @@
       ],
       "id": "20bb0ec5-2f1e-43ec-a693-56f44061736b",
       "name": "1st Link",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "## For Dynamic link with Google Search API\n",
+        "height": 288,
+        "width": 464
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -64,
+        -80
+      ],
+      "typeVersion": 1,
+      "id": "603a678f-37fb-4cef-b1df-5e008621691b",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/customsearch/v1?key=AIzaSyAARGhuoIWbdhGrVAy8AgS53O-wId1vpGc&cx=d38acc76026c2499c&q=Latest Artificial Intelligence News",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -16,
+        16
+      ],
+      "id": "f9ce3098-5ee3-45c9-b0fb-63b55e42f074",
+      "name": "HTTP Request",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// The input JSON is in items[0].json\nconst data = items[0].json;\n\n// Get first organic result link\nconst firstLink = data.organic_results?.[0]?.link || null;\n\nreturn [\n  {\n    json: {\n      first_link: firstLink\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        16
+      ],
+      "id": "ef2b8edf-e74f-42c6-b4f1-d940fb939e0a",
+      "name": "1st Link1",
       "disabled": true
     }
   ],
@@ -836,6 +880,17 @@
       "main": [
         []
       ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "1st Link1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
@@ -843,7 +898,7 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "c05a2bc2-312d-43b6-aeb8-a17674f876a0",
+  "versionId": "60dd66f9-cae7-4889-8f77-f3316973359e",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "59c459b1a6099976fed79f9b6ba5f0bfe7b4ace292af3ecabf89a067823e7c89"
