@@ -9,8 +9,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
       "typeVersion": 1,
       "position": [
-        744,
-        96
+        728,
+        320
       ],
       "id": "8b095700-3ee4-4f69-85aa-1f75bd7d5c22",
       "name": "Groq Chat Model",
@@ -26,8 +26,8 @@
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        0,
-        144
+        -16,
+        368
       ],
       "id": "bbf67c32-da57-45e2-b9b1-b8368b390b0a",
       "name": "When clicking ‘Execute workflow’"
@@ -40,8 +40,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        224,
-        144
+        208,
+        368
       ],
       "id": "f817b834-0657-4892-a4a3-bbb8d5cdeeab",
       "name": "Scrap website"
@@ -53,8 +53,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        448,
-        144
+        432,
+        368
       ],
       "id": "5522ce1f-014a-4829-9596-4bebcf491c6c",
       "name": "Filter content"
@@ -68,8 +68,8 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        672,
-        -128
+        656,
+        96
       ],
       "id": "716738aa-ea50-457d-8d59-4d7cd964b204",
       "name": "Summarize"
@@ -150,8 +150,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        736,
-        292
+        720,
+        516
       ],
       "id": "721c616a-d3e7-475b-b038-3733c6fb3a2a",
       "name": "If AI Content"
@@ -172,8 +172,8 @@
       "type": "n8n-nodes-base.googleDocs",
       "typeVersion": 2,
       "position": [
-        1024,
-        220
+        1008,
+        444
       ],
       "id": "53620038-9e9f-4493-85a3-f4b502939716",
       "name": "Insert into Word",
@@ -200,8 +200,8 @@
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.4,
       "position": [
-        1248,
-        292
+        1232,
+        516
       ],
       "id": "3713d41e-65d8-479e-9d22-d9968e410b84",
       "name": "Alert for AI",
@@ -229,8 +229,8 @@
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.4,
       "position": [
-        1024,
-        -24
+        1008,
+        200
       ],
       "id": "9ce4ab62-44bb-4536-a575-af619ce24ca2",
       "name": "Send the summary",
@@ -241,6 +241,43 @@
           "name": "Mohit_slack_e2m_TESTBOT"
         }
       }
+    },
+    {
+      "parameters": {
+        "q": "Artificial Intelligence News",
+        "additionalFields": {},
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-serpapi.serpApi",
+      "typeVersion": 1,
+      "position": [
+        16,
+        144
+      ],
+      "id": "a5febf12-6b6b-412c-a7a7-c9ee762baac1",
+      "name": "Google search",
+      "credentials": {
+        "serpApi": {
+          "id": "eE192lZLcEqdELcm",
+          "name": "SerpApi account e2m"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "## For Dynamic link\n",
+        "height": 288,
+        "width": 416
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -112,
+        48
+      ],
+      "typeVersion": 1,
+      "id": "41c628d8-ab5d-4dfc-aece-bd2d48a11c38",
+      "name": "Sticky Note"
     }
   ],
   "pinData": {},
@@ -336,6 +373,11 @@
       "main": [
         []
       ]
+    },
+    "Google search": {
+      "main": [
+        []
+      ]
     }
   },
   "active": false,
@@ -343,7 +385,7 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "9e137c0d-290c-4fb8-b172-29bf8af0825f",
+  "versionId": "6fb2cce7-e6ae-4c19-b5cc-ca12ef48d418",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "59c459b1a6099976fed79f9b6ba5f0bfe7b4ace292af3ecabf89a067823e7c89"
