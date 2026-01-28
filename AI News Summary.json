@@ -1,0 +1,353 @@
+{
+  "name": "AI News Summary",
+  "nodes": [
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-safeguard-20b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        744,
+        96
+      ],
+      "id": "8b095700-3ee4-4f69-85aa-1f75bd7d5c22",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "lp6K0eOPcvjsaxjW",
+          "name": "Groq account e2m"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        144
+      ],
+      "id": "bbf67c32-da57-45e2-b9b1-b8368b390b0a",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://www.artificialintelligence-news.com/news/anthropic-selected-build-government-ai-assistant-pilot/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        224,
+        144
+      ],
+      "id": "f817b834-0657-4892-a4a3-bbb8d5cdeeab",
+      "name": "Scrap website"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get HTML and DEBUG what's actually there\nconst html = $input.first().json.html || $input.first().json.body || $input.first().json.data || '';\nconst url = $input.first().json.url || '';\n\nif (!html || html.length === 0) {\n  return [{ json: { error: 'No HTML input', url } }];\n}\n\nconst article = {\n  title: '',\n  content: '',\n  author: '',\n  date: '',\n  imageUrl: '',\n  url,\n  debug: {\n    htmlLength: html.length,\n    hasParagraphs: html.includes('<p>'),\n    hasDivs: html.includes('<div'),\n    hasArticle: html.includes('<article')\n  }\n};\n\n// ========== 1. FORCE TITLE EXTRACTION ==========\nconst allHeadings = html.match(/<h[1-6][^>]*>([\\s\\S]*?)<\\/h[1-6]>/gi) || [];\nconst titleCandidates = allHeadings.map(h => {\n  return (h.replace(/<[^>]*>/g, '').match(/[A-Z][a-zA-Z\\s\\-,]{10,100}/) || [''])[0];\n}).filter(t => t && t.length > 15 && !t.includes('Categories') && !t.includes('About'));\n\narticle.title = titleCandidates[0] || '';\n\n// ========== 2. NUCLEAR CONTENT EXTRACTION ==========\n// Strategy 1: Find ALL text between <p> tags\nlet content = '';\nconst paragraphs = html.match(/<p\\b[^<]*(?:(?!<\\/p\\b)[^<])*([^<]*(?:&[^;\\s]*;[^<]*)*)(?!<\\/p\\b)[^<]*<\\/p>/gi) || [];\n\nparagraphs.forEach(p => {\n  let text = p\n    .replace(/<a[^>]*>([^<]*)<\\/a>/gi, '$1')  // Keep link text\n    .replace(/<[^>]*>/g, ' ')                 // Remove all tags\n    .replace(/&nbsp;|&#160;/gi, ' ')\n    .replace(/&#8217;|&#x27;/gi, \"'\")\n    .replace(/&#8220;|&#8221;|\"/gi, '\"')\n    .replace(/&amp;/gi, '&')\n    .replace(/\\s+/g, ' ')\n    .trim();\n  \n  if (text.length > 30 && text.search(/[A-Za-z]{4,}/) > -1) {\n    content += text + '\\n\\n';\n  }\n});\n\n// Strategy 2: If no paragraphs, grab ALL text content\nif (content.length < 100) {\n  content = html\n    .replace(/<script\\b[\\s\\S]*?<\\/script>/gi, '')     // Remove scripts\n    .replace(/<style\\b[\\s\\S]*?<\\/style>/gi, '')      // Remove styles\n    .replace(/<!--[\\s\\S]*?-->/g, '')                // Remove comments\n    .replace(/<[^>]*>/g, ' ')                       // Remove ALL tags\n    .replace(/\\s+/g, ' ')\n    .trim();\n  \n  // Extract sentences (heuristic for real content)\n  const sentences = content.match(/[A-Z][^.!?]{50,}[.!?]+/g) || [];\n  content = sentences.slice(0, 20).join('\\n\\n');\n}\n\n// Strategy 3: FINAL fallback - grab ANY substantial text block\nif (content.length < 200) {\n  const textBlocks = html.match(/[a-zA-Z\\s\\-,]{100,1000}[.!?;]/g) || [];\n  content = textBlocks.slice(0, 15).join('\\n\\n');\n}\n\narticle.content = content.substring(0, 10000);\n\n// ========== 3. FORCE IMAGE ==========\nconst imgMatch = html.match(/https?:\\/\\/[^\"\\s<>]+\\.(?:png|jpg|jpeg|webp|gif)(?:\\?[^\"\\s<>]*)?(?=[ \"\\s<>])/i);\narticle.imageUrl = imgMatch ? imgMatch[0] : article.imageUrl;\n\n// ========== 4. FORCE AUTHOR ==========\nconst authorMatch = html.match(/(?:by|author|writer)[:\\s]*([A-Z][a-zA-Z\\s\\-\\.]{2,50})/i);\narticle.author = authorMatch ? authorMatch[1].trim() : '';\n\n// ========== 5. FORCE DATE ==========\nconst dateMatch = html.match(/\\d{4}-\\d{2}-\\d{2}|\\w+\\s+\\d{1,2},\\s+\\d{4}/);\narticle.date = dateMatch ? dateMatch[0] : article.date;\n\narticle.debug.contentLength = article.content.length;\narticle.debug.paragraphsFound = paragraphs.length;\n\nreturn [{ json: article }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        144
+      ],
+      "id": "5522ce1f-014a-4829-9596-4bebcf491c6c",
+      "name": "Filter content"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Please provide a concise summary for below content:\n\n{{ $json.content }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        672,
+        -128
+      ],
+      "id": "716738aa-ea50-457d-8d59-4d7cd964b204",
+      "name": "Summarize"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d54ed3d5-f4a4-41cc-86f3-76404efaf740",
+              "leftValue": "={{ $json.content }}",
+              "rightValue": "AI",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "eb820d86-c994-4693-91a5-dcf90607866e",
+              "leftValue": "={{ $json.content }}",
+              "rightValue": "artificial intelligence",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "cc31f5a0-f5a9-48aa-a840-15582494722e",
+              "leftValue": "={{ $json.content }}",
+              "rightValue": "Machine Learning",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "b1d7eecd-075c-4d91-bbe4-d6252a6e44b6",
+              "leftValue": "={{ $json.content }}",
+              "rightValue": "Deep Learning",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "b64c3435-d2e4-497f-97ba-3566b10e5e81",
+              "leftValue": "={{ $json.content }}",
+              "rightValue": "=ML",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "46df9a80-71ea-4e31-86cd-6ecbe07d343d",
+              "leftValue": "={{ $json.content }}",
+              "rightValue": "dl",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        736,
+        292
+      ],
+      "id": "721c616a-d3e7-475b-b038-3733c6fb3a2a",
+      "name": "If AI Content"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "https://docs.google.com/document/d/18yTsn76coPZVQeqd8JMkfnQ-6oclHv51hySchfMTP74/edit?usp=sharing",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "text": "=Title:{{ $json.title }}\n\nContent:\n\n{{ $json.content }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        1024,
+        220
+      ],
+      "id": "53620038-9e9f-4493-85a3-f4b502939716",
+      "name": "Insert into Word",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "RG0tZnE2A7d7Fq6t",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0A83AJSNTS",
+          "mode": "id"
+        },
+        "text": "=This News is Related to Artificial Intelligence.\nOn Topic: {{ $('If AI Content').item.json.title }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        1248,
+        292
+      ],
+      "id": "3713d41e-65d8-479e-9d22-d9968e410b84",
+      "name": "Alert for AI",
+      "webhookId": "d3b3780c-4242-4c59-b591-90a9463c310e",
+      "credentials": {
+        "slackApi": {
+          "id": "HtRnvplxGBedCX1J",
+          "name": "Mohit_slack_e2m_TESTBOT"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0A75J4C9NZ",
+          "mode": "id"
+        },
+        "text": "={{ $json.output }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        1024,
+        -24
+      ],
+      "id": "9ce4ab62-44bb-4536-a575-af619ce24ca2",
+      "name": "Send the summary",
+      "webhookId": "d3b3780c-4242-4c59-b591-90a9463c310e",
+      "credentials": {
+        "slackApi": {
+          "id": "HtRnvplxGBedCX1J",
+          "name": "Mohit_slack_e2m_TESTBOT"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Summarize",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Scrap website",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrap website": {
+      "main": [
+        [
+          {
+            "node": "Filter content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter content": {
+      "main": [
+        [
+          {
+            "node": "Summarize",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If AI Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize": {
+      "main": [
+        [
+          {
+            "node": "Send the summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If AI Content": {
+      "main": [
+        [
+          {
+            "node": "Insert into Word",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Alert for AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert into Word": {
+      "main": [
+        [
+          {
+            "node": "Alert for AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alert for AI": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "9e137c0d-290c-4fb8-b172-29bf8af0825f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "59c459b1a6099976fed79f9b6ba5f0bfe7b4ace292af3ecabf89a067823e7c89"
+  },
+  "id": "ScfZmMUcG_T2aQoM1udEB",
+  "tags": []
+}
