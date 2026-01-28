@@ -36,130 +36,6 @@
     },
     {
       "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": false,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "1f0f07c7-1aa7-4b43-b404-4b34b8d650da",
-              "leftValue": "={{ $json.body.text }}",
-              "rightValue": "urgent",
-              "operator": {
-                "type": "string",
-                "operation": "contains"
-              }
-            },
-            {
-              "id": "bd2524c1-d3b6-445f-ae88-55f6c6c1a618",
-              "leftValue": "={{ $json.subject }}",
-              "rightValue": "immediate",
-              "operator": {
-                "type": "string",
-                "operation": "contains"
-              }
-            },
-            {
-              "id": "284053f4-1183-4679-b3d2-bf31f42088bd",
-              "leftValue": "={{ $json.body.text }}",
-              "rightValue": "immediate",
-              "operator": {
-                "type": "string",
-                "operation": "contains"
-              }
-            },
-            {
-              "id": "e370497f-cea5-478f-bbad-b1df77dc11cc",
-              "leftValue": "={{ $json.subject }}",
-              "rightValue": "urgent",
-              "operator": {
-                "type": "string",
-                "operation": "contains"
-              }
-            }
-          ],
-          "combinator": "or"
-        },
-        "options": {
-          "ignoreCase": true
-        }
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        448,
-        -32
-      ],
-      "id": "d3bacbde-405a-4520-aa36-ba4739e1b035",
-      "name": "If"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": false,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "1f0f07c7-1aa7-4b43-b404-4b34b8d650da",
-              "leftValue": "={{ $json.body.text }}",
-              "rightValue": "Acme Corp",
-              "operator": {
-                "type": "string",
-                "operation": "contains"
-              }
-            },
-            {
-              "id": "2a791c13-0753-479b-a07b-1415c5e5e2d8",
-              "leftValue": "={{ $json.subject }}",
-              "rightValue": "urgent Acme Corp",
-              "operator": {
-                "type": "string",
-                "operation": "contains"
-              }
-            },
-            {
-              "id": "bd2524c1-d3b6-445f-ae88-55f6c6c1a618",
-              "leftValue": "={{ $json.subject }}",
-              "rightValue": "Acme Corp",
-              "operator": {
-                "type": "string",
-                "operation": "contains"
-              }
-            },
-            {
-              "id": "bf41f93b-1d9f-4e25-b7a5-fad65a41198f",
-              "leftValue": "={{ $json.body.text }}",
-              "rightValue": "Acme Corp",
-              "operator": {
-                "type": "string",
-                "operation": "contains"
-              }
-            }
-          ],
-          "combinator": "or"
-        },
-        "options": {
-          "ignoreCase": true
-        }
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        672,
-        -128
-      ],
-      "id": "8e80afc9-b952-43f8-83d5-e98a2db06eac",
-      "name": "If3"
-    },
-    {
-      "parameters": {
         "operation": "appendOrUpdate",
         "documentId": {
           "__rl": true,
@@ -361,6 +237,130 @@
           "name": "Mohit_slack_e2m_TESTBOT"
         }
       }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1f0f07c7-1aa7-4b43-b404-4b34b8d650da",
+              "leftValue": "={{ $json.body.text }}",
+              "rightValue": "urgent",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "bd2524c1-d3b6-445f-ae88-55f6c6c1a618",
+              "leftValue": "={{ $json.subject }}",
+              "rightValue": "immediate",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "284053f4-1183-4679-b3d2-bf31f42088bd",
+              "leftValue": "={{ $json.body.text }}",
+              "rightValue": "immediate",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "e370497f-cea5-478f-bbad-b1df77dc11cc",
+              "leftValue": "={{ $json.subject }}",
+              "rightValue": "urgent",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        -32
+      ],
+      "id": "d3bacbde-405a-4520-aa36-ba4739e1b035",
+      "name": "If Urgent"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1f0f07c7-1aa7-4b43-b404-4b34b8d650da",
+              "leftValue": "={{ $json.body.text }}",
+              "rightValue": "Acme Corp",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "2a791c13-0753-479b-a07b-1415c5e5e2d8",
+              "leftValue": "={{ $json.subject }}",
+              "rightValue": "Acme Corp",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "bd2524c1-d3b6-445f-ae88-55f6c6c1a618",
+              "leftValue": "={{ $json.subject }}",
+              "rightValue": "Acme Corp",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "bf41f93b-1d9f-4e25-b7a5-fad65a41198f",
+              "leftValue": "={{ $json.body.text }}",
+              "rightValue": "Acme Corp",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        672,
+        -128
+      ],
+      "id": "8e80afc9-b952-43f8-83d5-e98a2db06eac",
+      "name": "If Acme Corp"
     }
   ],
   "pinData": {
@@ -27031,18 +27031,23 @@
       "main": [
         [
           {
-            "node": "If",
+            "node": "If Urgent",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "If": {
+    "Append or update row in sheet": {
+      "main": [
+        []
+      ]
+    },
+    "If Urgent": {
       "main": [
         [
           {
-            "node": "If3",
+            "node": "If Acme Corp",
             "type": "main",
             "index": 0
           }
@@ -27056,7 +27061,7 @@
         ]
       ]
     },
-    "If3": {
+    "If Acme Corp": {
       "main": [
         [
           {
@@ -27066,11 +27071,6 @@
           }
         ]
       ]
-    },
-    "Append or update row in sheet": {
-      "main": [
-        []
-      ]
     }
   },
   "active": false,
@@ -27078,7 +27078,7 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "9aa1c5c4-15c3-4f83-a6f6-76dc5325b77c",
+  "versionId": "b97f1314-2561-4119-803b-178df57f1a5d",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "59c459b1a6099976fed79f9b6ba5f0bfe7b4ace292af3ecabf89a067823e7c89"
