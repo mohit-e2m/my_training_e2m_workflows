@@ -9,8 +9,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
       "typeVersion": 1,
       "position": [
-        728,
-        320
+        680,
+        544
       ],
       "id": "8b095700-3ee4-4f69-85aa-1f75bd7d5c22",
       "name": "Groq Chat Model",
@@ -26,22 +26,22 @@
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        -16,
-        368
+        -64,
+        592
       ],
       "id": "bbf67c32-da57-45e2-b9b1-b8368b390b0a",
       "name": "When clicking ‘Execute workflow’"
     },
     {
       "parameters": {
-        "url": "https://www.artificialintelligence-news.com/news/anthropic-selected-build-government-ai-assistant-pilot/",
+        "url": "=https://www.artificialintelligence-news.com/news/anthropic-selected-build-government-ai-assistant-pilot/",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        208,
-        368
+        160,
+        592
       ],
       "id": "f817b834-0657-4892-a4a3-bbb8d5cdeeab",
       "name": "Scrap website"
@@ -53,8 +53,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        432,
-        368
+        384,
+        592
       ],
       "id": "5522ce1f-014a-4829-9596-4bebcf491c6c",
       "name": "Filter content"
@@ -68,8 +68,8 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        656,
-        96
+        608,
+        320
       ],
       "id": "716738aa-ea50-457d-8d59-4d7cd964b204",
       "name": "Summarize"
@@ -150,8 +150,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        720,
-        516
+        672,
+        740
       ],
       "id": "721c616a-d3e7-475b-b038-3733c6fb3a2a",
       "name": "If AI Content"
@@ -172,8 +172,8 @@
       "type": "n8n-nodes-base.googleDocs",
       "typeVersion": 2,
       "position": [
-        1008,
-        444
+        960,
+        668
       ],
       "id": "53620038-9e9f-4493-85a3-f4b502939716",
       "name": "Insert into Word",
@@ -200,8 +200,8 @@
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.4,
       "position": [
-        1232,
-        516
+        1184,
+        740
       ],
       "id": "3713d41e-65d8-479e-9d22-d9968e410b84",
       "name": "Alert for AI",
@@ -229,8 +229,8 @@
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.4,
       "position": [
-        1008,
-        200
+        960,
+        424
       ],
       "id": "9ce4ab62-44bb-4536-a575-af619ce24ca2",
       "name": "Send the summary",
@@ -245,14 +245,15 @@
     {
       "parameters": {
         "q": "Artificial Intelligence News",
+        "location": "India",
         "additionalFields": {},
         "requestOptions": {}
       },
       "type": "n8n-nodes-serpapi.serpApi",
       "typeVersion": 1,
       "position": [
-        16,
-        144
+        -32,
+        320
       ],
       "id": "a5febf12-6b6b-412c-a7a7-c9ee762baac1",
       "name": "Google search",
@@ -268,19 +269,465 @@
       "parameters": {
         "content": "## For Dynamic link\n",
         "height": 288,
-        "width": 416
+        "width": 464
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        -112,
-        48
+        -64,
+        224
       ],
       "typeVersion": 1,
       "id": "41c628d8-ab5d-4dfc-aece-bd2d48a11c38",
       "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "jsCode": "// The input JSON is in items[0].json\nconst data = items[0].json;\n\n// Get first organic result link\nconst firstLink = data.organic_results?.[0]?.link || null;\n\nreturn [\n  {\n    json: {\n      first_link: firstLink\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        320
+      ],
+      "id": "20bb0ec5-2f1e-43ec-a693-56f44061736b",
+      "name": "1st Link",
+      "disabled": true
     }
   ],
-  "pinData": {},
+  "pinData": {
+    "Google search": [
+      {
+        "json": {
+          "search_metadata": {
+            "id": "6979fba6a3f7305d97de194b",
+            "status": "Success",
+            "json_endpoint": "https://serpapi.com/searches/00d8cc6667af91ae/6979fba6a3f7305d97de194b.json",
+            "pixel_position_endpoint": "https://serpapi.com/searches/00d8cc6667af91ae/6979fba6a3f7305d97de194b.json_with_pixel_position",
+            "created_at": "2026-01-28 12:05:58 UTC",
+            "processed_at": "2026-01-28 12:05:58 UTC",
+            "google_url": "https://www.google.com/search?q=Artificial+Intelligence+News&oq=Artificial+Intelligence+News&uule=w+CAIQICIFSW5kaWE&sourceid=chrome&ie=UTF-8",
+            "raw_html_file": "https://serpapi.com/searches/00d8cc6667af91ae/6979fba6a3f7305d97de194b.html",
+            "total_time_taken": 3.33
+          },
+          "search_parameters": {
+            "engine": "google",
+            "q": "Artificial Intelligence News",
+            "location_requested": "India",
+            "location_used": "India",
+            "google_domain": "google.com",
+            "device": "desktop"
+          },
+          "search_information": {
+            "query_displayed": "Artificial Intelligence News",
+            "total_results": 473000000,
+            "time_taken_displayed": 0.21,
+            "organic_results_state": "Results for exact spelling"
+          },
+          "organic_results": [
+            {
+              "position": 1,
+              "title": "AI News | Latest News | Insights Powering AI-Driven Business ...",
+              "link": "https://www.artificialintelligence-news.com/",
+              "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://www.artificialintelligence-news.com/&ved=2ahUKEwjUq8yCma6SAxWPKVkFHeiOE98QFnoECBsQAQ",
+              "displayed_link": "https://www.artificialintelligence-news.com",
+              "favicon": "https://serpapi.com/searches/6979fba6a3f7305d97de194b/images/a48c25545bfbe6905f96efb63dfd6ac3c969155f284c376e332088551208c7b0.png",
+              "snippet": "AI News delivers the latest updates in artificial intelligence, machine learning, deep learning, enterprise AI, and emerging tech worldwide.",
+              "snippet_highlighted_words": [
+                "AI News"
+              ],
+              "sitelinks": {
+                "inline": [
+                  {
+                    "title": "News",
+                    "link": "https://www.artificialintelligence-news.com/artificial-intelligence-news/"
+                  },
+                  {
+                    "title": "Categories",
+                    "link": "https://www.artificialintelligence-news.com/categories/ai-and-us/"
+                  },
+                  {
+                    "title": "Events",
+                    "link": "https://artificialintelligence-news.com/events/"
+                  },
+                  {
+                    "title": "Resources",
+                    "link": "https://www.artificialintelligence-news.com/resources"
+                  }
+                ]
+              },
+              "source": "AI News"
+            },
+            {
+              "position": 2,
+              "title": "Artificial intelligence | MIT News | Massachusetts Institute of ...",
+              "link": "https://news.mit.edu/topic/artificial-intelligence2",
+              "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://news.mit.edu/topic/artificial-intelligence2&ved=2ahUKEwjUq8yCma6SAxWPKVkFHeiOE98QFnoECBwQAQ",
+              "displayed_link": "https://news.mit.edu › topic › artificial-intelligence2",
+              "favicon": "https://serpapi.com/searches/6979fba6a3f7305d97de194b/images/a48c25545bfbe6905f96efb63dfd6ac366870926c8724cab8a109d4bb9be3312.png",
+              "snippet": "New research demonstrates how AI models can be tested to ensure they don't cause harm by revealing anonymized patient health data. January 5, 2026. Read full ...",
+              "snippet_highlighted_words": [
+                "AI models can be tested to ensure they don't cause harm"
+              ],
+              "source": "Massachusetts Institute of Technology"
+            },
+            {
+              "position": 3,
+              "title": "AI News & Artificial Intelligence",
+              "link": "https://techcrunch.com/category/artificial-intelligence/",
+              "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://techcrunch.com/category/artificial-intelligence/&ved=2ahUKEwjUq8yCma6SAxWPKVkFHeiOE98QFnoECBoQAQ",
+              "displayed_link": "https://techcrunch.com › category › artificial-intelligence",
+              "favicon": "https://serpapi.com/searches/6979fba6a3f7305d97de194b/images/a48c25545bfbe6905f96efb63dfd6ac3797485a2ffbaebc5cdda14e2c67056bb.jpeg",
+              "snippet": "Read the latest on artificial intelligence and machine learning tech, the companies that are building them, and the ethical issues AI raises today.",
+              "snippet_highlighted_words": [
+                "Read the latest on artificial intelligence and machine learning tech"
+              ],
+              "source": "TechCrunch"
+            },
+            {
+              "position": 4,
+              "title": "Artificial Intelligence - Latest AI News and Analysis",
+              "link": "https://www.wsj.com/tech/ai?gaa_at=eafs&gaa_n=AWEtsqc-LrIjFb1qSft_QFUoCLixLbWUdOb0ppFWud5J8aIGlNGu40dzbi13&gaa_ts=6979ff2d&gaa_sig=k11PGWVmRvFla7T4il4P_AGXOnR0IBykgLV_MTMEQNTXBc7uzLKKv7qT2lRZr46-4FYgzOEXejvSQMauIOc39g%3D%3D",
+              "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://www.wsj.com/tech/ai%3Fgaa_at%3Deafs%26gaa_n%3DAWEtsqc-LrIjFb1qSft_QFUoCLixLbWUdOb0ppFWud5J8aIGlNGu40dzbi13%26gaa_ts%3D6979ff2d%26gaa_sig%3Dk11PGWVmRvFla7T4il4P_AGXOnR0IBykgLV_MTMEQNTXBc7uzLKKv7qT2lRZr46-4FYgzOEXejvSQMauIOc39g%253D%253D&ved=2ahUKEwjUq8yCma6SAxWPKVkFHeiOE98QFnoECFUQAQ",
+              "displayed_link": "https://www.wsj.com › tech",
+              "favicon": "https://serpapi.com/searches/6979fba6a3f7305d97de194b/images/a48c25545bfbe6905f96efb63dfd6ac3dc5f05f2eecd3baea6a6f94ad6d3ea42.png",
+              "snippet": "The latest artificial intelligence news coverage focusing on the technology, tools and the companies building AI technology.",
+              "snippet_highlighted_words": [
+                "The latest artificial intelligence news coverage"
+              ],
+              "source": "The Wall Street Journal"
+            },
+            {
+              "position": 5,
+              "title": "AI News | Latest Headlines and Developments",
+              "link": "https://www.reuters.com/technology/artificial-intelligence/",
+              "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://www.reuters.com/technology/artificial-intelligence/&ved=2ahUKEwjUq8yCma6SAxWPKVkFHeiOE98QFnoECEwQAQ",
+              "displayed_link": "https://www.reuters.com › artificial-intelligence",
+              "favicon": "https://serpapi.com/searches/6979fba6a3f7305d97de194b/images/a48c25545bfbe6905f96efb63dfd6ac395cdb068e0a7d6e6d601ffc33ecddd6d.png",
+              "snippet": "Explore the latest artificial intelligence news with Reuters - from AI breakthroughs and technology trends to regulation, ethics, business and global ...",
+              "snippet_highlighted_words": [
+                "Explore the latest artificial intelligence news with Reuters"
+              ],
+              "source": "Reuters"
+            },
+            {
+              "position": 6,
+              "title": "Artificial intelligence - BBC News",
+              "link": "https://www.bbc.com/news/topics/ce1qrvleleqt",
+              "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://www.bbc.com/news/topics/ce1qrvleleqt&ved=2ahUKEwjUq8yCma6SAxWPKVkFHeiOE98QFnoECE8QAQ",
+              "displayed_link": "https://www.bbc.com › news › topics",
+              "favicon": "https://serpapi.com/searches/6979fba6a3f7305d97de194b/images/a48c25545bfbe6905f96efb63dfd6ac3fe556e1b491aeaf20cd5820f104d511b.png",
+              "snippet": "AI boom will produce victors and carnage, tech boss warns. Cisco chief executive Chuck Robbins compares AI to the dotcom bubble of the early 2000s. 11 hrs ago.",
+              "snippet_highlighted_words": [
+                "AI boom will produce victors and carnage"
+              ],
+              "source": "BBC"
+            },
+            {
+              "position": 7,
+              "title": "Latest AI News and AI Breakthroughs that Matter Most",
+              "link": "https://www.crescendo.ai/news/latest-ai-news-and-updates",
+              "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://www.crescendo.ai/news/latest-ai-news-and-updates&ved=2ahUKEwjUq8yCma6SAxWPKVkFHeiOE98QFnoECEkQAQ",
+              "displayed_link": "https://www.crescendo.ai › news › latest-ai-news-and-u...",
+              "favicon": "https://serpapi.com/searches/6979fba6a3f7305d97de194b/images/a48c25545bfbe6905f96efb63dfd6ac3f677d28a968d70b666cf4bb9a8cf0048.png",
+              "snippet": "Summary: Apple has officially announced that a completely reimagined, AI-powered version of Siri is set to debut in 2026. This fundamental transformation will ...",
+              "snippet_highlighted_words": [
+                "AI"
+              ],
+              "source": "Crescendo.ai"
+            },
+            {
+              "position": 8,
+              "title": "Artificial intelligence",
+              "link": "https://www.nbcnews.com/artificial-intelligence",
+              "redirect_link": "https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://www.nbcnews.com/artificial-intelligence&ved=2ahUKEwjUq8yCma6SAxWPKVkFHeiOE98QFnoECFIQAQ",
+              "displayed_link": "https://www.nbcnews.com › artificial-intelligence",
+              "favicon": "https://serpapi.com/searches/6979fba6a3f7305d97de194b/images/a48c25545bfbe6905f96efb63dfd6ac3df96ef935ae4e7bbaf80cfcdd278ec43.png",
+              "snippet": "The latest news and top stories on artificial intelligence, including AI chatbots like Microsoft's ChatGPT, Apple's AI Chatbot and Google's Bard.",
+              "snippet_highlighted_words": [
+                "on"
+              ],
+              "source": "NBC News"
+            }
+          ],
+          "perspectives": [
+            {
+              "author": "Mark Schaefer",
+              "author_description": "Author of marketing books",
+              "source": "LinkedIn",
+              "title": "Headline in the U.S. this week: \"White House releases AI doctored news photo ...\" ... the rest doesn't matter. The topic doesn't matter. This isn't one of Trump's memes. It's an actual news photo. When the government knowingly and egregiously manipulates new",
+              "link": "https://www.linkedin.com/posts/markwschaefer_headline-in-the-us-this-week-white-house-activity-7421197012143869952-M8YW",
+              "date": "2 days ago"
+            },
+            {
+              "author": "FOX13TampaBay",
+              "author_description": "Tampa-based news station",
+              "source": "Facebook",
+              "extensions": [
+                "7 reactions "
+              ],
+              "thumbnails": [
+                "https://serpapi.com/searches/6979fba6a3f7305d97de194b/images/beadd9de6fd05dc46ac3be824610f50e2dab9476bf38e5b6f9d5287e37f88c58.jpeg"
+              ],
+              "title": "Pinterest plans to lay off under 15% of its workforce as the image-sharing platform pivots more of its money to artificial intelligence. More Below 🔗⬇️",
+              "link": "https://www.facebook.com/FOX13TampaBay/posts/pinterest-plans-to-lay-off-under-15-of-its-workforce-as-the-image-sharing-platfo/1362299969276862/",
+              "date": "36 minutes ago"
+            },
+            {
+              "author": "sfgate",
+              "author_description": "San Francisco-based news website",
+              "source": "Instagram",
+              "extensions": [
+                "360+ likes "
+              ],
+              "thumbnails": [
+                "https://serpapi.com/searches/6979fba6a3f7305d97de194b/images/beadd9de6fd05dc42fcf71e5bd77d2425c79b630705953791509ae8a99723afc.jpeg"
+              ],
+              "title": "San Francisco-based Pinterest is laying off hundreds of employees and justifying the move with plans to take advantage of artificial intelligence. The social media company announced the layoff of up to 15% of its staff in a filing with the Securities and Exchange Commission on Tuesday, adding that it also plans to reduce its office space. The filing said that, along with changing Pinterest’s sales staff, the cuts are meant to reallocate resources to “AI-focused roles” and prioritize “AI-powered products and capabilities.” Keep reading at the link in bio.",
+              "link": "https://www.instagram.com/p/DUCBFlNjFXR/",
+              "date": "13 hours ago"
+            },
+            {
+              "author": "Al Jazeera English",
+              "author_description": "TV network",
+              "source": "YouTube",
+              "duration": "25:14",
+              "extensions": [
+                "8.4K+ views "
+              ],
+              "thumbnails": [
+                "https://img.youtube.com/vi/705SXlptCCY/hqdefault.jpg"
+              ],
+              "title": "Will the AI bubble burst or boom? | The Stream",
+              "link": "https://www.youtube.com/watch?v=705SXlptCCY",
+              "date": "4 days ago",
+              "video": "https://encrypted-vtbn0.gstatic.com/video?q=tbn:ANd9GcTBgstBbRE8wm2DNPY7CWjSvEoM-l1ol-3qNg"
+            },
+            {
+              "author": "firerock31",
+              "author_description": "Tech writer & designer",
+              "source": "Threads",
+              "extensions": [
+                "8 likes "
+              ],
+              "thumbnails": [
+                "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ3ec3lM6LHixPOkgXgARyl-7MM6U4k_vOAwQvLojE82xdNSJlFw98honzRHw&usqp=CAI&s"
+              ],
+              "title": "AI wishing & efficiency news: Pinterest is repositioning itself as AI driven platform and is cutting 15% of its workforce and also reducing office space (aka effciency).",
+              "link": "https://www.threads.com/@firerock31/post/DUBJHovFHM8/ai-wishing-efficiency-news-pinterest-is-repositioning-itself-as-ai-driven",
+              "date": "21 hours ago"
+            },
+            {
+              "author": "Parmy Olson",
+              "author_description": "Technology columnist for Bloomberg",
+              "source": "Bloomberg.com",
+              "thumbnails": [
+                "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRhpnwAbRbco9enRdRc4SIOEPYGC1cM2u4A4bfJ4i7TdF5xlhVKR6XPA84SVg&usqp=CAI&s"
+              ],
+              "title": "Anthropic’s Next Big AI Hit Could Also Bruise the Jobs Market",
+              "link": "https://www.bloomberg.com/opinion/articles/2026-01-27/anthropic-next-big-ai-hit-could-also-bruise-the-jobs-market",
+              "date": "1 day ago"
+            },
+            {
+              "author": "fox31denver",
+              "author_description": "Denver-based TV station",
+              "source": "Facebook",
+              "extensions": [
+                "10+ reactions "
+              ],
+              "thumbnails": [
+                "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSpVPFLH0PipphlKvO66IFAQELWcdJ7d-uDOt-6ZUYMBOqEmM4-AjF3-iCoZw&usqp=CAI&s"
+              ],
+              "title": "Pinterest plans to lay off under 15% of its workforce, as part of broader restructuring that arrives as the image-sharing platform pivots more of its money to artificial intelligence. (AP Photo/Peter Morgan, File)",
+              "link": "https://www.facebook.com/fox31denver/posts/pinterest-plans-to-lay-off-under-15-of-its-workforce-as-part-of-broader-restruct/1430585658659562/",
+              "date": "9 hours ago"
+            },
+            {
+              "author": "fortunemag",
+              "author_description": "Business magazine",
+              "source": "Instagram",
+              "extensions": [
+                "170+ likes "
+              ],
+              "thumbnails": [
+                "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTi0WQRamWWjnVYF3R61OsIzfKGwE0pka9Fq0_uNl3rj5wTwhGawAnc957IQA&usqp=CAI&s"
+              ],
+              "title": "As fears mount that artificial intelligence is ushering in an era of “jobless growth,” Goldman Sachs chairman and CEO David Solomon is offering a staunch rebuttal to the doomsayers. Speaking in January, amid a massive capital investment boom in AI infrastructure, Solomon insisted the labor market is not facing a catastrophe. “I’m not in the job apocalypse camp,” Solomon told the Goldman Sachs Exchanges podcast, rejecting the narrative that the current technological wave represents a fundamental threat to human employment. While acknowledging the labor market has looked fragile relative to recent economic growth, Solomon argued the current disruption is just more of the normal course of creative destruction, rather than structurally unique. 🔗 Click the link in the bio to read more.",
+              "link": "https://www.instagram.com/p/DT-YxXVjIkp/",
+              "date": "1 day ago"
+            },
+            {
+              "author": "CBSSanFrancisco",
+              "author_description": "San Francisco-licensed TV station",
+              "source": "Facebook",
+              "extensions": [
+                "10+ reactions "
+              ],
+              "thumbnails": [
+                "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR8qV0FIxCUcG0EaRtpyfkudIqnLc5j3rV_9sgnhiCevUoZwWMbyXE0UVUpNQ&usqp=CAI&s"
+              ],
+              "title": "Pinterest plans to cut its workforce by 15% this year, a move the company said will allow it to reallocate resources to the build-out of its artificial intelligence capabilities, the San Francisco-based company disclosed in a regulatory filing on Tuesday. Pinterest is",
+              "link": "https://www.facebook.com/CBSSanFrancisco/posts/pinterest-plans-to-cut-its-workforce-by-15-this-year-a-move-the-company-said-wil/1360179292814295/",
+              "date": "16 hours ago"
+            },
+            {
+              "author": "Milwaukee Journal Sentinel",
+              "thumbnails": [
+                "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR9bIN21iI5ami4IDQhgNmAYCwIZzpx1WLZRnpHXRAtSD2irfvbqHK6m5nc6g&usqp=CAI&s"
+              ],
+              "title": "Ai data centers prompt strong reader response | Letters",
+              "link": "https://www.jsonline.com/story/opinion/readers/2026/01/28/data-centers-port-washington-artificial-intelligence-jobs-environment/88317827007/",
+              "date": "1 hour ago"
+            },
+            {
+              "author": "ajstream",
+              "author_description": "Al Jazeera's current affairs programme",
+              "source": "Instagram",
+              "extensions": [
+                "1.2K+ likes "
+              ],
+              "thumbnails": [
+                "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQZAWwzPmJYiKqT9eU4_Bj5C1dD-WG8SepGAT1THjynXMVdK43ck1QLFcZ9xQ&usqp=CAI&s"
+              ],
+              "title": "Hundreds of billions of dollars are being invested into artificial intelligence to ensure that it succeeds, but what happens if it doesn’t pay off? . With so much future revenue riding on AI, some economists warn that reality may fall short, raising fears about what will happen to the economy. . 🔗Tap the link in @ajstream’s bio for more.",
+              "link": "https://www.instagram.com/p/DT8dAXmDPX4/",
+              "date": "2 days ago"
+            },
+            {
+              "author": "unep",
+              "author_description": "Environmental authority",
+              "source": "Facebook",
+              "extensions": [
+                "20+ reactions "
+              ],
+              "thumbnails": [
+                "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTSoFqPO7PQUQjTlQGQoeZomVWJ9VOkQwMcGZdL7oEaT_Z69xTFu3J_V4-PuA&usqp=CAI&s"
+              ],
+              "title": "AI and data centres are pushing up electricity use fast. They already account for about 1.5% of global power demand, and that figure is expected to double by 2030. As the world is trying to cut planet-warming emissions from the energy sector, improving how w",
+              "link": "https://www.facebook.com/unep/posts/ai-and-data-centres-are-pushing-up-electricity-use-fast-they-already-account-for/1300308725462536/",
+              "date": "7 hours ago"
+            }
+          ],
+          "top_stories": [
+            {
+              "title": "The Top 3 Artificial Intelligence (AI) Chip Stocks to Buy With $50,000 in 2026",
+              "link": "https://www.fool.com/investing/2026/01/28/the-top-3-artificial-intelligence-ai-chip-stocks-t/",
+              "source": "The Motley Fool",
+              "source_logo": "https://serpapi.com/searches/6979fba6a3f7305d97de194b/images/f9bd5a0fd94d3568801106df8f74e6763307d6cb74e767e74039a57e9c59c9f0.png",
+              "date": "7 hours ago"
+            },
+            {
+              "title": "'Thermodynamic computing' could slash energy use of AI image generation by a factor of ten billion, study claims — prototypes show promise but huge task required to create hardware that can rival current models",
+              "link": "https://www.tomshardware.com/tech-industry/artificial-intelligence/thermodynamic-computing-could-slash-energy-use-of-ai-image-generation-by-a-factor-of-ten-billion-study-claims-prototypes-show-promise-but-huge-task-required-to-create-hardware-that-can-rival-current-models",
+              "source": "Tom's Hardware",
+              "source_logo": "https://serpapi.com/searches/6979fba6a3f7305d97de194b/images/f9bd5a0fd94d3568b0125ad3ed4e48a5911d3483cea33b4f330dd3438b2d272e.png",
+              "date": "30 minutes ago"
+            },
+            {
+              "title": "Strong iPhone Sales Drive Apple’s Holiday Quarter as Google AI Deal Looms",
+              "link": "https://meyka.com/blog/strong-iphone-sales-drive-apples-holiday-quarter-as-google-ai-deal-looms/",
+              "source": "Meyka",
+              "source_logo": "https://serpapi.com/searches/6979fba6a3f7305d97de194b/images/f9bd5a0fd94d35683cc7bbf39989ce0ecade6ee7572723d7fd36e1addd447635.png",
+              "date": "6 minutes ago"
+            },
+            {
+              "title": "Do no harm: Why Missouri must set guardrails for AI mental health tools",
+              "link": "https://missouriindependent.com/2026/01/28/do-no-harm-why-missouri-must-set-guardrails-for-ai-mental-health-tools/",
+              "source": "Missouri Independent",
+              "source_logo": "https://serpapi.com/searches/6979fba6a3f7305d97de194b/images/f9bd5a0fd94d35683ea43e51fd47becc01715b0d5f3e90e4d469c796a70438c1.png",
+              "date": "15 minutes ago"
+            }
+          ],
+          "top_stories_link": "https://www.google.com/search?sca_esv=5181a7324ff7032e&q=Artificial+Intelligence+News&tbm=nws&source=univ&tbo=u&sa=X&ved=2ahUKEwjUq8yCma6SAxWPKVkFHeiOE98Qt8YBKAF6BAgeEAM",
+          "top_stories_serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google&google_domain=google.com&location=India&q=Artificial+Intelligence+News&tbm=nws",
+          "related_searches": [
+            {
+              "block_position": 1,
+              "query": "Artificial intelligence news today",
+              "link": "https://www.google.com/search?sca_esv=5181a7324ff7032e&q=Artificial+intelligence+news+today&sa=X&ved=2ahUKEwjUq8yCma6SAxWPKVkFHeiOE98Q1QJ6BAhBEAE",
+              "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google&google_domain=google.com&location=India&q=Artificial+intelligence+news+today"
+            },
+            {
+              "block_position": 1,
+              "query": "AI news today live",
+              "link": "https://www.google.com/search?sca_esv=5181a7324ff7032e&q=AI+news+today+live&sa=X&ved=2ahUKEwjUq8yCma6SAxWPKVkFHeiOE98Q1QJ6BAhIEAE",
+              "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google&google_domain=google.com&location=India&q=AI+news+today+live"
+            },
+            {
+              "block_position": 1,
+              "query": "Future of AI news",
+              "link": "https://www.google.com/search?sca_esv=5181a7324ff7032e&q=Future+of+AI+news&sa=X&ved=2ahUKEwjUq8yCma6SAxWPKVkFHeiOE98Q1QJ6BAhGEAE",
+              "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google&google_domain=google.com&location=India&q=Future+of+AI+news"
+            },
+            {
+              "block_position": 1,
+              "query": "Moltbot ai",
+              "link": "https://www.google.com/search?sca_esv=5181a7324ff7032e&q=Moltbot+ai&sa=X&ved=2ahUKEwjUq8yCma6SAxWPKVkFHeiOE98Q1QJ6BAhHEAE",
+              "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google&google_domain=google.com&location=India&q=Moltbot+ai"
+            },
+            {
+              "block_position": 1,
+              "query": "Prism open ai",
+              "link": "https://www.google.com/search?sca_esv=5181a7324ff7032e&q=Prism+open+ai&sa=X&ved=2ahUKEwjUq8yCma6SAxWPKVkFHeiOE98Q1QJ6BAhFEAE",
+              "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google&google_domain=google.com&location=India&q=Prism+open+ai"
+            },
+            {
+              "block_position": 1,
+              "query": "AI news websites",
+              "link": "https://www.google.com/search?sca_esv=5181a7324ff7032e&q=AI+news+websites&sa=X&ved=2ahUKEwjUq8yCma6SAxWPKVkFHeiOE98Q1QJ6BAhEEAE",
+              "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google&google_domain=google.com&location=India&q=AI+news+websites"
+            },
+            {
+              "block_position": 1,
+              "query": "News articles about AI taking over",
+              "link": "https://www.google.com/search?sca_esv=5181a7324ff7032e&q=News+articles+about+AI+taking+over&sa=X&ved=2ahUKEwjUq8yCma6SAxWPKVkFHeiOE98Q1QJ6BAhDEAE",
+              "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google&google_domain=google.com&location=India&q=News+articles+about+AI+taking+over"
+            },
+            {
+              "block_position": 1,
+              "query": "AI research news",
+              "link": "https://www.google.com/search?sca_esv=5181a7324ff7032e&q=AI+research+news&sa=X&ved=2ahUKEwjUq8yCma6SAxWPKVkFHeiOE98Q1QJ6BAhCEAE",
+              "serpapi_link": "https://serpapi.com/search.json?device=desktop&engine=google&google_domain=google.com&location=India&q=AI+research+news"
+            }
+          ],
+          "pagination": {
+            "current": 1,
+            "next": "https://www.google.com/search?q=Artificial+Intelligence+News&sca_esv=5181a7324ff7032e&ei=qft5aZSzLo_T5NoP6J3O-A0&start=10&sa=N&sstk=Af77f_e1aHzkaO9H00dX0wheKg8AbhBmngvtpeJaqLoLGRaEM8dR4bX8a366s9bwBkaIvkaEgs-xeu4l6_b9L74t0MPO3PGVG7bHWA&ved=2ahUKEwjUq8yCma6SAxWPKVkFHeiOE98Q8NMDegQICRAW",
+            "other_pages": {
+              "2": "https://www.google.com/search?q=Artificial+Intelligence+News&sca_esv=5181a7324ff7032e&ei=qft5aZSzLo_T5NoP6J3O-A0&start=10&sa=N&sstk=Af77f_e1aHzkaO9H00dX0wheKg8AbhBmngvtpeJaqLoLGRaEM8dR4bX8a366s9bwBkaIvkaEgs-xeu4l6_b9L74t0MPO3PGVG7bHWA&ved=2ahUKEwjUq8yCma6SAxWPKVkFHeiOE98Q8tMDegQICRAE",
+              "3": "https://www.google.com/search?q=Artificial+Intelligence+News&sca_esv=5181a7324ff7032e&ei=qft5aZSzLo_T5NoP6J3O-A0&start=20&sa=N&sstk=Af77f_e1aHzkaO9H00dX0wheKg8AbhBmngvtpeJaqLoLGRaEM8dR4bX8a366s9bwBkaIvkaEgs-xeu4l6_b9L74t0MPO3PGVG7bHWA&ved=2ahUKEwjUq8yCma6SAxWPKVkFHeiOE98Q8tMDegQICRAG",
+              "4": "https://www.google.com/search?q=Artificial+Intelligence+News&sca_esv=5181a7324ff7032e&ei=qft5aZSzLo_T5NoP6J3O-A0&start=30&sa=N&sstk=Af77f_e1aHzkaO9H00dX0wheKg8AbhBmngvtpeJaqLoLGRaEM8dR4bX8a366s9bwBkaIvkaEgs-xeu4l6_b9L74t0MPO3PGVG7bHWA&ved=2ahUKEwjUq8yCma6SAxWPKVkFHeiOE98Q8tMDegQICRAI",
+              "5": "https://www.google.com/search?q=Artificial+Intelligence+News&sca_esv=5181a7324ff7032e&ei=qft5aZSzLo_T5NoP6J3O-A0&start=40&sa=N&sstk=Af77f_e1aHzkaO9H00dX0wheKg8AbhBmngvtpeJaqLoLGRaEM8dR4bX8a366s9bwBkaIvkaEgs-xeu4l6_b9L74t0MPO3PGVG7bHWA&ved=2ahUKEwjUq8yCma6SAxWPKVkFHeiOE98Q8tMDegQICRAK",
+              "6": "https://www.google.com/search?q=Artificial+Intelligence+News&sca_esv=5181a7324ff7032e&ei=qft5aZSzLo_T5NoP6J3O-A0&start=50&sa=N&sstk=Af77f_e1aHzkaO9H00dX0wheKg8AbhBmngvtpeJaqLoLGRaEM8dR4bX8a366s9bwBkaIvkaEgs-xeu4l6_b9L74t0MPO3PGVG7bHWA&ved=2ahUKEwjUq8yCma6SAxWPKVkFHeiOE98Q8tMDegQICRAM",
+              "7": "https://www.google.com/search?q=Artificial+Intelligence+News&sca_esv=5181a7324ff7032e&ei=qft5aZSzLo_T5NoP6J3O-A0&start=60&sa=N&sstk=Af77f_e1aHzkaO9H00dX0wheKg8AbhBmngvtpeJaqLoLGRaEM8dR4bX8a366s9bwBkaIvkaEgs-xeu4l6_b9L74t0MPO3PGVG7bHWA&ved=2ahUKEwjUq8yCma6SAxWPKVkFHeiOE98Q8tMDegQICRAO",
+              "8": "https://www.google.com/search?q=Artificial+Intelligence+News&sca_esv=5181a7324ff7032e&ei=qft5aZSzLo_T5NoP6J3O-A0&start=70&sa=N&sstk=Af77f_e1aHzkaO9H00dX0wheKg8AbhBmngvtpeJaqLoLGRaEM8dR4bX8a366s9bwBkaIvkaEgs-xeu4l6_b9L74t0MPO3PGVG7bHWA&ved=2ahUKEwjUq8yCma6SAxWPKVkFHeiOE98Q8tMDegQICRAQ",
+              "9": "https://www.google.com/search?q=Artificial+Intelligence+News&sca_esv=5181a7324ff7032e&ei=qft5aZSzLo_T5NoP6J3O-A0&start=80&sa=N&sstk=Af77f_e1aHzkaO9H00dX0wheKg8AbhBmngvtpeJaqLoLGRaEM8dR4bX8a366s9bwBkaIvkaEgs-xeu4l6_b9L74t0MPO3PGVG7bHWA&ved=2ahUKEwjUq8yCma6SAxWPKVkFHeiOE98Q8tMDegQICRAS",
+              "10": "https://www.google.com/search?q=Artificial+Intelligence+News&sca_esv=5181a7324ff7032e&ei=qft5aZSzLo_T5NoP6J3O-A0&start=90&sa=N&sstk=Af77f_e1aHzkaO9H00dX0wheKg8AbhBmngvtpeJaqLoLGRaEM8dR4bX8a366s9bwBkaIvkaEgs-xeu4l6_b9L74t0MPO3PGVG7bHWA&ved=2ahUKEwjUq8yCma6SAxWPKVkFHeiOE98Q8tMDegQICRAU"
+            }
+          },
+          "serpapi_pagination": {
+            "current": 1,
+            "next_link": "https://serpapi.com/search.json?device=desktop&engine=google&google_domain=google.com&location=India&q=Artificial+Intelligence+News&start=10",
+            "next": "https://serpapi.com/search.json?device=desktop&engine=google&google_domain=google.com&location=India&q=Artificial+Intelligence+News&start=10",
+            "other_pages": {
+              "2": "https://serpapi.com/search.json?device=desktop&engine=google&google_domain=google.com&location=India&q=Artificial+Intelligence+News&start=10",
+              "3": "https://serpapi.com/search.json?device=desktop&engine=google&google_domain=google.com&location=India&q=Artificial+Intelligence+News&start=20",
+              "4": "https://serpapi.com/search.json?device=desktop&engine=google&google_domain=google.com&location=India&q=Artificial+Intelligence+News&start=30",
+              "5": "https://serpapi.com/search.json?device=desktop&engine=google&google_domain=google.com&location=India&q=Artificial+Intelligence+News&start=40",
+              "6": "https://serpapi.com/search.json?device=desktop&engine=google&google_domain=google.com&location=India&q=Artificial+Intelligence+News&start=50",
+              "7": "https://serpapi.com/search.json?device=desktop&engine=google&google_domain=google.com&location=India&q=Artificial+Intelligence+News&start=60",
+              "8": "https://serpapi.com/search.json?device=desktop&engine=google&google_domain=google.com&location=India&q=Artificial+Intelligence+News&start=70",
+              "9": "https://serpapi.com/search.json?device=desktop&engine=google&google_domain=google.com&location=India&q=Artificial+Intelligence+News&start=80",
+              "10": "https://serpapi.com/search.json?device=desktop&engine=google&google_domain=google.com&location=India&q=Artificial+Intelligence+News&start=90"
+            }
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
   "connections": {
     "Groq Chat Model": {
       "ai_languageModel": [
@@ -376,6 +823,17 @@
     },
     "Google search": {
       "main": [
+        [
+          {
+            "node": "1st Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1st Link": {
+      "main": [
         []
       ]
     }
@@ -385,7 +843,7 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "6fb2cce7-e6ae-4c19-b5cc-ca12ef48d418",
+  "versionId": "c05a2bc2-312d-43b6-aeb8-a17674f876a0",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "59c459b1a6099976fed79f9b6ba5f0bfe7b4ace292af3ecabf89a067823e7c89"
