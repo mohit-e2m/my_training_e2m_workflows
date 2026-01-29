@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environments
+venv/
+Smart_ChatBot/backend/venv/
+
+# Mac
+.DS_Store
+
+# Secrets
+.env
+*.env
