@@ -1,0 +1,151 @@
+{
+  "name": "Json transformation",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "c2a18359-b609-4869-8383-49b22f527040",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        0
+      ],
+      "id": "c3894e97-9c30-4a7b-9f79-8a67434dd845",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "807d5aed-e0b1-4cfe-bd74-6fd2261a6db9",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "fromEmail": "honey.kotecha@e2m.solutions",
+        "toEmail": "rudra.joshi@e2m.solutions",
+        "subject": "Json Transformation",
+        "emailFormat": "text",
+        "text": "={{ $json.data.map(item => `${item.name}: ${item.qty}`).join('\\n') }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        672,
+        0
+      ],
+      "id": "a236983c-7d8b-4bfd-b883-500db117d40e",
+      "name": "Send email",
+      "webhookId": "e56ea901-639b-4752-a233-3413c1601e91",
+      "credentials": {
+        "smtp": {
+          "id": "nXQKE2VxEtfQgeKc",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Edit Fields": [
+      {
+        "json": {
+          "name": "Item A",
+          "qty": "1"
+        }
+      },
+      {
+        "json": {
+          "name": "Item B",
+          "qty": "2"
+        }
+      },
+      {
+        "json": {
+          "name": "Item C",
+          "qty": "3"
+        }
+      },
+      {
+        "json": {
+          "name": "Item D",
+          "qty": "4"
+        }
+      },
+      {
+        "json": {
+          "name": "Item E",
+          "qty": "5"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Send email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "e37e9508-2d5e-4e15-adaa-5cb368ed353a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "59c459b1a6099976fed79f9b6ba5f0bfe7b4ace292af3ecabf89a067823e7c89"
+  },
+  "id": "PINp40xtqnBDcJrtMlY0u",
+  "tags": []
+}
