@@ -1,0 +1,700 @@
+{
+  "name": "Task Action Creation using Local & Cloud LLM",
+  "nodes": [
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        896,
+        224
+      ],
+      "id": "bd6c073d-4960-4ae6-aa75-b2270aed7798",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "lp6K0eOPcvjsaxjW",
+          "name": "Groq account e2m"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"array\",\n  \"items\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"task_name\": { \"type\": \"string\" },\n      \"objective\": { \"type\": \"string\" },\n      \"actions\": {\n        \"type\": \"array\",\n        \"items\": { \"type\": \"string\" }\n      },\n      \"constraints_and_considerations\": {\n        \"type\": \"array\",\n        \"items\": { \"type\": \"string\" }\n      },\n      \"dependencies_or_inputs\": {\n        \"type\": \"array\",\n        \"items\": { \"type\": \"string\" }\n      },\n      \"validation_and_testing\": {\n        \"type\": \"array\",\n        \"items\": { \"type\": \"string\" }\n      }\n    },\n    \"required\": [\n      \"task_name\",\n      \"objective\",\n      \"actions\",\n      \"constraints_and_considerations\",\n      \"dependencies_or_inputs\",\n      \"validation_and_testing\"\n    ]\n  }\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1024,
+        224
+      ],
+      "id": "80fed4ee-dbe0-4919-877b-1c52b850f766",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "path": "4a0e35d9-c045-49f7-97a9-14dfc9caf534",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "6c035fbf-ded8-4b9d-82b6-95eae5ed4f47",
+      "name": "Get Task Data",
+      "webhookId": "4a0e35d9-c045-49f7-97a9-14dfc9caf534"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nlet taskText = \"\";\n\nitems.forEach((item, index) => {\n  const task = item.json;\n\n  taskText += `Task ${index + 1}\\\\n`;\n  taskText += `Task Name: ${task.task_name || \"N/A\"}\\\\n`;\n  taskText += `Description: ${task.description || \"N/A\"}\\\\n`;\n\n  if (Array.isArray(task.comments) && task.comments.length) {\n    taskText += `Comments:\\\\n`;\n    task.comments.forEach(comment => {\n      taskText += `- ${comment}\\\\n`;\n    });\n  }\n\n  taskText += `\\\\n----------------------\\\\n\\\\n`;\n});\n\n// Escape quotes too (VERY important)\ntaskText = taskText.replace(/\"/g, '\\\\\"');\n\nreturn [\n  {\n    json: {\n      formattedTasks: taskText\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        0
+      ],
+      "id": "7fbcbf25-4f64-46dd-988c-81d0282f2751",
+      "name": "Formatting tasks",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://14.194.54.150:8000/v1/chat/completions",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"meta-llama/Llama-3.2-3B-Instruct\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"You are a senior project analyst.\\n\\nYou will receive structured task data. Each task includes:\\n- task_name\\n- description\\n- comments (may contain updates, confirmations, questions, redundant notes, or sensitive information)\\n\\nYour job is to analyze each task and produce a clear, professional SUMMARY of what the task is about.\\n\\n========================\\n🔍 PROCESSING RULES\\n========================\\n\\nFor EACH task:\\n\\n1. Understand the true purpose and goal of the task.\\n2. Treat comments as internal notes — extract only meaningful context such as:\\n   - Clarifications\\n   - Problems mentioned\\n   - Requirements\\n   - Constraints\\n3. REMOVE from consideration:\\n   - Greetings\\n   - Status updates like “done”, “completed”, “started”\\n   - Repetitions\\n   - Internal coordination chatter\\n4. SECURITY RULE:\\n   - If credentials, usernames, passwords, API keys, admin URLs, or login info appear → DO NOT include them in the summary.\\n5. Do NOT invent new requirements.\\n\\n========================\\n🧠 WHAT A GOOD SUMMARY DOES\\n========================\\nA good summary should:\\n- Explain what the task is about\\n- Mention the problem or goal\\n- Include important context from comments\\n- Be concise (2–4 sentences)\\n- Be written in a neutral, professional tone\\n\\n========================\\n📥 TASK INPUT DATA\\n========================\\nEach section below represents ONE task. Process ALL tasks independently.\\n\\n{{ $json.formattedTasks }}\\n\\n========================\\n📤 OUTPUT FORMAT (STRICT)\\n========================\\nReturn ONLY a JSON array.\\n\\nEach task must follow this structure exactly:\\n\\n{\\n  \\\"task_name\\\": \\\"<original task name>\\\",\\n  \\\"summary\\\": \\\"<clear professional summary of the task>\\\"\\n}\\n\\nDo not include explanations.\\nDo not include instructions.\\nDo not repeat the input.\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        656,
+        0
+      ],
+      "id": "f04cfabd-b9e2-41c9-ad1b-4325337e66a9",
+      "name": "Summarize the task (Local LLM)"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You will receive a list of task summaries.\n\nEach summary represents one real project task.  \nExpand each into a complete execution-ready instruction set.\n\n========================\nINPUT TASK SUMMARIES\n========================\n\n{{ $json.choices[0].message.content }}\n\n========================\nINSTRUCTIONS\n========================\n\nFor EACH task:\n\n1. Interpret the summary and determine the real implementation scope.\n2. Define step-by-step execution actions.\n3. Include technical and quality considerations where relevant.\n4. Add dependencies such as assets, access, approvals, or external inputs.\n5. Define validation or testing steps to confirm task completion.\n\n========================\nOUTPUT FORMAT (STRICT)\n========================\n\nReturn ONLY a JSON array.\n\nEach task must follow this exact structure:\n\n{\n  \"task_name\": \"<task name>\",\n  \"objective\": \"<what needs to be achieved>\",\n  \"actions\": [\n    \"Implementation step 1\",\n    \"Implementation step 2\"\n  ],\n  \"constraints_and_considerations\": [\n    \"Performance, design, security, SOP, or technical constraints\"\n  ],\n  \"dependencies_or_inputs\": [\n    \"Assets, links, scripts, credentials, approvals, etc.\"\n  ],\n  \"validation_and_testing\": [\n    \"QA checks and functional validation steps\"\n  ]\n}\n\nDo not include commentary.\nDo not repeat the summaries.\nOnly return the JSON array.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a senior technical project execution planner.\n\nYour job is to convert task summaries into structured, implementation-ready action plans.\n\nYou think like:\n• A project manager\n• A developer\n• A QA engineer\n\nYou expand high-level task summaries into:\n- Concrete implementation steps\n- Technical considerations\n- Dependencies\n- Validation/testing steps\n\nYou do NOT repeat summaries.\nYou do NOT provide explanations outside the required JSON.\nYou do NOT invent features beyond what is implied by the summary.\nYou always write in a professional, neutral, execution-focused tone."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        880,
+        0
+      ],
+      "id": "7daec12d-82d8-4be0-89b7-adfda4785227",
+      "name": "Analyze and give action (Cloud LLM)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the array inside \"output\"\nconst tasks = $json.output;\n\nif (!Array.isArray(tasks)) {\n  throw new Error(\"Expected 'output' to be an array of tasks\");\n}\n\nreturn tasks.map(task => {\n  return {\n    json: {\n      task_name: task.task_name || \"\",\n      objective: task.objective || \"\",\n      actions: task.actions || [],\n      constraints_and_considerations: task.constraints_and_considerations || [],\n      dependencies_or_inputs: task.dependencies_or_inputs || [],\n      validation_and_testing: task.validation_and_testing || []\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        0
+      ],
+      "id": "8b1b1024-2694-4de3-9006-9a5f7f44cfeb",
+      "name": "Arrange the task"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1VarNQBEGTY8HglT4QnP-PgmTGBERclR-83IjjXUclgE",
+          "mode": "list",
+          "cachedResultName": "Task Creation From Cloud LLM",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VarNQBEGTY8HglT4QnP-PgmTGBERclR-83IjjXUclgE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VarNQBEGTY8HglT4QnP-PgmTGBERclR-83IjjXUclgE/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Task": "={{ $json.task_name }}",
+            "Objective": "={{ $json.objective }}",
+            "Actions": "={{ $json.actions.join('\\n') }}\n",
+            "Consideration": "={{ $json.constraints_and_considerations.join('\\n')}}",
+            "Dependencies/Inputs": "={{ $json.dependencies_or_inputs.join('\\n') }}",
+            "Validation": "={{ $json.validation_and_testing.join('\\n') }}"
+          },
+          "matchingColumns": [
+            "output"
+          ],
+          "schema": [
+            {
+              "id": "Task",
+              "displayName": "Task",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Objective",
+              "displayName": "Objective",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Actions",
+              "displayName": "Actions",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Consideration",
+              "displayName": "Consideration",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Dependencies/Inputs",
+              "displayName": "Dependencies/Inputs",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Validation",
+              "displayName": "Validation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1456,
+        0
+      ],
+      "id": "08bab965-c1bc-4221-a734-7189e727afd5",
+      "name": "Append in sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GWAtOzHY0NPKrE8b",
+          "name": "mohit_e2m"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Get Task Data": [
+      {
+        "json": {
+          "task_name": "Investigate Server Resource Usage & Rate-Limit Issue [Panama Equity]",
+          "description": "The website is consuming higher-than-normal resources, or there may have been a sudden spike in traffic. To investigate this further from the resource-usage perspective",
+          "comments": [
+            "The client did report an issue yesterday with the website also not translating their listings anymore?, For this task, the site has gone down twice in the last two days, so we need to check why this is happening.",
+            "Pls add some details to the task regarding the requirement",
+            "Hi Please take care of this task. Thank you!"
+          ]
+        }
+      },
+      {
+        "json": {
+          "task_name": "Add Images To Post",
+          "description": "Nelson Exteriors--- https://www.nelson-exteriors.com/blog/guide-to-deck-installation-atlanta Blog: The Ultimate Guide to Deck Installation, Repair & Rebuilding in Metro Atlanta Please add the images inside the content document to the published page. The client placed images where they should be added to the blog. I have left the comments where they have placed the images unresolved, so you can easily identify those.",
+          "comments": [
+            "We have added images as per the client's comment on the post. URL: https://www.nelson-exteriors.com/blog/guide-to-deck-installation-atlanta Please review it and let us know if any other changes are needed. Thank you!",
+            "Hello Please validate the image location is as per clients's doc initiate QA for this blog. URL: https://www.nelson-exteriors.com/blog/guide-to-deck-installation-atlanta",
+            "I have verified the images in the blog post . It's perfectly aligned with the client requirement. URL: https://www.nelson-exteriors.com/blog/guide-to-deck-installation-atlanta Screenshot : https://www.dropbox.com/scl/fi/6tie2p62rd8zu59uj6pcp/Full-screen-December-09-2025-14-55-57.mp4?rlkey=e83rostxqyt8l0m19akgbl50v&dl=0 Let me know if you have any questions or concerns",
+            "We have added images as per the client's comment on the post. URL: https://www.nelson-exteriors.com/blog/guide-to-deck-installation-atlanta Please review it and let us know if any other changes are needed. Thank you! Notes: We have followed SOP for image implementation, added an alt tag, and adjusted the image ratio to 500x500px as per SOP."
+          ]
+        }
+      },
+      {
+        "json": {
+          "task_name": "Website Update - Happy Tails",
+          "description": "https://happytails.tips/wp-admin Username: test The need here is to cleanup the site for easier updates in the future. It is built in Elementor but we need a consistent header/nav and footer across the site, with a copyright date in the footer that updates dynamically each year. Also, favicon should be updated. Please follow this wireframe to build the homepage and for the header and footer: https://docs.google.com/drawings/d/1ZGVrLyTSUYONCdJxBNHLzA3dfNq7QvJyZtS0AJQMRLI/edit?usp=sharing NOTE: the hero image of the 3 animals should STAY, don't swap that out All logo variations are attached, as are images that may be needed. You do NOT need to build out any interior pages beyond just getting the header and footer set up properly.",
+          "comments": [
+            "Hi We have started working on the landing page as per the provided instructions. We have created the header and footer according to the mockup, and for now, they are visible only on the landing page. We have also started working on the landing page sections as per the wireframe. You can review it here: https://happytails.tips/landing/ We will continue working on the remaining parts of the landing page. Please check and let me know if you have any questions.",
+            "Hello We have completed the below sections with responsiveness on the landing page as per the provided instructions: We Know How: https://prnt.sc/hliuRd5nj76r Popular Solutions: https://prnt.sc/mBZhiO3MrN5v Restore Your Pet’s Balance: https://prnt.sc/m-b-Nx6O0CsB URL: https://happytails.tips/landing/ #Note: Could you please provide this image? https://prnt.sc/NYrLZXrgSX3n Right now, we have added a relevant image. Working on Natural Healing section. https://prnt.sc/Ltu2-ZpMP3uW Thank You!",
+            "Support Hello We have completed the Natural Healing section with responsive. screenshot: https://prnt.sc/JK7OViWyhX4g also we have completed the Download Our Free Guide section, except for the form. screenshot: https://prnt.sc/3-SKCs0zJy0x Note: The site uses a form script, please confirm whether we should add that script or create the form using a plugin. We have also checked the responsive design. The landing page is now completed with responsiveness, except for the form section. screenshot: https://prnt.sc/jcCq-0-fln_Z URL: https://happytails.tips/landing/"
+          ]
+        }
+      },
+      {
+        "json": {
+          "task_name": "Configure products and optimize the checkout process to improve user experience and conversions",
+          "description": "Create and configure 10 simple and variable products in WooCommerce. Set product categories, tags, pricing, SKU, and inventory management. Configure shipping zones, shipping methods, and tax settings. Enable and test payment gateways (Stripe/PayPal/CODS).",
+          "comments": [
+            "configuration of woocommerce done.",
+            "product categories created",
+            "Client want stripe payment gateway to integrate in website.",
+            "make sure all the api key keep in safe"
+          ]
+        }
+      },
+      {
+        "json": {
+          "task_name": "Upside Therapy Website",
+          "description": "PMS - https://3.basecamp.com/5970095/buckets/44366160/todolists/9210554592 =============================== Project Brief - https://docs.google.com/document/d/13IaJpANJbkx43UB2r21yN2L3rnB9myuiTbyFMDKO-Is/edit?tab=t.prl7gm2b8k04 We are doing a new website for: https://upsidetherapy.com/ This will be on an entirely new Wordpress, prefer to design it with Elementor. Location information, phone number can be found on their site. =============================== Loom Video - https://www.loom.com/share/1b0f05011dd041cf82d88fef5a57163d?sid=d79e59ca-3691-4daf-a755-d3cbde1bd6fe =============================== Folder - https://drive.google.com/drive/folders/17QiRZ1cieMmPZ-wqoZRcUMxCauOtEn1m?usp=sharing",
+          "comments": [
+            "Will start"
+          ]
+        }
+      },
+      {
+        "json": {
+          "task_name": "VSS add common footer in stage",
+          "description": "login url: https://stg-bgvsstudios-staging.kinsta.cloud/wp-admin/ user: test @devteam We need your help to add another section to the bottom of the footer. I have attached a .pdf mockup of how this should look. Requirements: Font: Brother-1816 Background color: #1F2A4A The logo needs to link to https://clubworks.com/ Each company name needs to be a link in the order listed below Do not include Visionary Spectacle Studios on this site Links: Peacock + Lewis: https://peacockandlewis.com/ JBD JGA: https://www.jbd-jga.com/ GGA: https://ggapartners.com/ Private Club Films: https://www.privateclubfilms.com/ Clubworks Engineering: https://clubworks.com/partner-firms/clubworks-engineering/ Buffalo Groupe: https://buffalogroupe.com/ KDC: https://kdcarchitects.com/ Please let me know if you have any questions, or if any issues arise.",
+          "comments": [
+            "Will integrate it."
+          ]
+        }
+      },
+      {
+        "json": {
+          "task_name": "Homepage Hero Section Implementation",
+          "description": "Design and implement the homepage hero section featuring a full-width banner with a background image slider, headline text, subheading, and two call-to-action buttons linking to Services and Contact pages. Ensure the section is optimized for fast loading and adapts properly across desktop, tablet, and mobile devices.",
+          "comments": [
+            "We will keep colour code same like in existing theme"
+          ]
+        }
+      },
+      {
+        "json": {
+          "task_name": "Mobile Responsiveness Fixes",
+          "description": "Review all major pages on mobile and tablet devices to fix layout issues such as overlapping elements, font scaling problems, misaligned buttons, and broken grids. Ensure touch-friendly spacing and consistent UI across screen sizes.",
+          "comments": [
+            "We will first complete in android device once its complete then start ios device responsive."
+          ]
+        }
+      }
+    ],
+    "Analyze and give action (Cloud LLM)": [
+      {
+        "json": {
+          "output": [
+            {
+              "task_name": "Investigate Server Resource Usage & Rate-Limit Issue [Panama Equity]",
+              "objective": "Identify the root causes of high server resource consumption and rate-limit errors on the Panama Equity website and propose/implement remediation steps.",
+              "actions": [
+                "Obtain SSH and monitoring tool credentials for the Panama Equity server.",
+                "Collect CPU, memory, disk I/O, and network usage metrics for the past 7 days using monitoring dashboards (e.g., New Relic, CloudWatch).",
+                "Review web server (Nginx/Apache) configuration for existing rate‑limit rules and error logs for 429 responses.",
+                "Analyze application logs (PHP, WordPress) for spikes, long‑running queries, or errors correlating with resource spikes.",
+                "Run a profiling tool (e.g., Xdebug, Query Monitor) on a staging clone to pinpoint inefficient code or database queries.",
+                "Check for abnormal traffic patterns or bot activity using access logs and a security plugin (e.g., Wordfence).",
+                "Document findings, quantify impact, and recommend specific actions (caching layer, CDN, query optimization, rate‑limit rule adjustments, bot mitigation).",
+                "If approved, implement quick‑win mitigations in a staging environment, test, then schedule production deployment following change‑management SOP."
+              ],
+              "constraints_and_considerations": [
+                "All investigations must not cause downtime; use read‑only access where possible.",
+                "Follow the organization’s change‑management and security SOPs, especially when modifying web‑server configs.",
+                "Maintain GDPR‑compliant handling of any logged user data.",
+                "Any code changes must be reviewed and pass existing CI/CD tests before deployment."
+              ],
+              "dependencies_or_inputs": [
+                "Server SSH credentials and sudo access.",
+                "Access to monitoring dashboards (New Relic, CloudWatch, etc.).",
+                "Current web‑server configuration files.",
+                "Application and web‑server log files for the last week.",
+                "Staging environment identical to production for testing.",
+                "Approval from the site owner for any configuration changes."
+              ],
+              "validation_and_testing": [
+                "Verify that CPU, memory, and network usage return to baseline levels over a 24‑hour observation period.",
+                "Confirm that HTTP 429 responses are no longer logged during normal traffic peaks.",
+                "Run load‑testing scripts (e.g., k6) on staging to ensure mitigations handle expected traffic.",
+                "Check site functionality (navigation, forms, checkout) after changes to ensure no regressions.",
+                "Document final metrics and obtain sign‑off from the client."
+              ]
+            },
+            {
+              "task_name": "Add Images To Post",
+              "objective": "Insert the required images into the existing Nelson Exteriors blog post, ensuring proper formatting, SEO attributes, and responsive display.",
+              "actions": [
+                "Log in to the WordPress admin of the Nelson Exteriors site and locate the target blog post.",
+                "Gather the image files from the client or approved stock source.",
+                "Compress and convert images to WebP (or optimized JPEG/PNG) keeping each under 200 KB.",
+                "Upload the optimized images to the WordPress Media Library.",
+                "Edit the blog post, place each image at the specified location, set appropriate alignment and size (using responsive image classes).",
+                "Add descriptive alt text and optional captions that follow SEO best practices.",
+                "Update image HTML to include srcset for responsive loading.",
+                "Save and preview the post on desktop and mobile viewports.",
+                "Clear any site cache (e.g., WP Super Cache) and CDN cache to ensure new assets are served."
+              ],
+              "constraints_and_considerations": [
+                "Images must not exceed the site’s maximum file size limit.",
+                "Alt text must be concise, descriptive, and free of keyword stuffing.",
+                "Maintain the existing visual design and avoid breaking the post layout.",
+                "Ensure compliance with accessibility (WCAG) and GDPR (no personal data in images)."
+              ],
+              "dependencies_or_inputs": [
+                "The set of image files to be added.",
+                "Copy for alt text and captions provided by the client.",
+                "WordPress admin credentials with editing rights.",
+                "Access to any caching plugins or CDN controls."
+              ],
+              "validation_and_testing": [
+                "View the updated post on multiple devices (desktop, tablet, mobile) to confirm images load correctly and are responsive.",
+                "Inspect page source to verify alt attributes and srcset markup.",
+                "Run a page‑speed test (e.g., GTmetrix) to ensure the new images do not degrade performance beyond acceptable thresholds.",
+                "Check that the SEO plugin (Yoast/Rank Math) reports no image‑related issues.",
+                "Confirm that the post is still indexed correctly in Google Search Console."
+              ]
+            },
+            {
+              "task_name": "Website Update - Happy Tails",
+              "objective": "Refactor the Happy Tails site to simplify future content updates and implement a unified, reusable header and footer across all pages.",
+              "actions": [
+                "Create a full backup of the site (files and database) before any modifications.",
+                "Audit the current theme/templates to locate duplicated header and footer code.",
+                "Set up a child theme (if not already in use) to preserve upgradeability.",
+                "Extract the header markup into a separate template part (header.php) and the footer into footer.php within the child theme.",
+                "Register WordPress menu locations for primary navigation and footer links.",
+                "Add widget areas or Gutenberg block patterns for easy editing of header elements (logo, menu) and footer elements (social icons, copyright).",
+                "Update all page templates to call get_header() and get_footer() so changes propagate site‑wide.",
+                "Document the new editing workflow for non‑technical staff (e.g., how to modify the menu or footer widgets).",
+                "Test the site on all major browsers and screen sizes to ensure the new header/footer render correctly.",
+                "Deploy changes to production after successful staging verification."
+              ],
+              "constraints_and_considerations": [
+                "Preserve existing SEO metadata, schema markup, and page titles.",
+                "Maintain full responsiveness; header and footer must adapt to mobile breakpoints.",
+                "Comply with the site’s branding guidelines (colors, fonts).",
+                "Avoid conflicts with existing plugins that may inject header/footer content."
+              ],
+              "dependencies_or_inputs": [
+                "Access to FTP/SFTP or hosting file manager.",
+                "Current theme files and a list of any custom header/footer elements.",
+                "Design mockups or style guide for the unified header/footer.",
+                "WordPress admin credentials with theme editing rights."
+              ],
+              "validation_and_testing": [
+                "Confirm that changes to the header/footer in the WordPress Customizer or Widgets area instantly reflect across all pages.",
+                "Run a visual regression test on a sample of pages (home, about, contact) to ensure no layout shifts.",
+                "Check that all navigation links function and that the footer’s dynamic year displays correctly.",
+                "Validate HTML/CSS through W3C validators and run a Lighthouse audit for accessibility and performance.",
+                "Obtain sign‑off from the client that the site is easier to update."
+              ]
+            },
+            {
+              "task_name": "Configure products and optimize the checkout process to improve user experience and conversions",
+              "objective": "Set up WooCommerce products with complete data and streamline the checkout flow to increase conversion rates while maintaining compliance.",
+              "actions": [
+                "Back up the WooCommerce database and export the current product list.",
+                "Import or manually create missing products, ensuring each has SKU, price, stock status, and high‑quality images.",
+                "Organize products into logical categories and tags; configure attributes and variations where applicable.",
+                "Enable guest checkout and disable unnecessary checkout fields (company name, order notes) via WooCommerce settings or a checkout‑field editor plugin.",
+                "Install and configure a trusted payment gateway (Stripe/PayPal) with test credentials.",
+                "Add trust badges, secure‑socket layer (SSL) indicator, and concise shipping information to the checkout page.",
+                "Implement an auto‑fill feature for returning customers using WooCommerce’s built‑in address management.",
+                "Optimize checkout page performance by minifying CSS/JS and enabling caching for static assets.",
+                "Create a test order workflow (using sandbox credentials) to verify end‑to‑end purchase.",
+                "Set up e‑commerce tracking in Google Analytics (Enhanced Ecommerce) to monitor funnel metrics."
+              ],
+              "constraints_and_considerations": [
+                "All payment handling must remain PCI‑DSS compliant; never store raw card data.",
+                "GDPR compliance: provide clear consent checkboxes for marketing communications.",
+                "Changes must not affect existing orders or customer data.",
+                "Maintain SSL throughout the checkout flow; mixed content is prohibited."
+              ],
+              "dependencies_or_inputs": [
+                "Complete product data CSV (titles, descriptions, SKUs, prices, inventory).",
+                "Optimized product images.",
+                "Payment gateway API keys and sandbox credentials.",
+                "Access to WooCommerce settings (admin role).",
+                "Google Analytics property ID for e‑commerce tracking."
+              ],
+              "validation_and_testing": [
+                "Complete a sandbox purchase from cart to order confirmation without errors.",
+                "Verify that the order appears correctly in the WooCommerce admin and that payment status updates.",
+                "Run a performance test on the checkout page (target load time <2 seconds).",
+                "Check that removed fields are no longer present and that required fields validate correctly.",
+                "Confirm that Google Analytics records the transaction in the Enhanced Ecommerce reports."
+              ]
+            },
+            {
+              "task_name": "Upside Therapy Website",
+              "objective": "Design and launch a fully responsive WordPress site for Upside Therapy using Elementor, adhering to branding and accessibility standards.",
+              "actions": [
+                "Provision a WordPress installation on the hosting environment and install the Hello Elementor theme.",
+                "Upload and activate Elementor Pro license.",
+                "Install essential plugins: Yoast SEO, WPForms, Wordfence, and a caching plugin (e.g., WP Rocket).",
+                "Create global header and footer using Elementor Theme Builder, matching the provided branding guide.",
+                "Build the required page templates (Home, About, Services, Contact, Blog) using Elementor sections and widgets.",
+                "Populate each page with client‑provided copy, images, and calls‑to‑action.",
+                "Configure the contact form with WPForms, set email notifications to the client’s address, and enable reCAPTCHA.",
+                "Apply SEO basics: set meta titles, descriptions, generate XML sitemap, and configure schema for Local Business.",
+                "Optimize performance: enable lazy loading, compress images, configure caching, and set up a CDN if available.",
+                "Conduct cross‑device testing (desktop, tablet, mobile) and run an accessibility audit (WCAG AA).",
+                "Present the staging site to the client for feedback, iterate as needed, then migrate to the live domain."
+              ],
+              "constraints_and_considerations": [
+                "Design must follow the supplied brand style guide (colors, typography, logo usage).",
+                "Site must achieve WCAG AA compliance for contrast, keyboard navigation, and ARIA labels.",
+                "Page load time should be under 3 seconds on mobile (Google PageSpeed Insights ≥90).",
+                "All third‑party scripts must be loaded asynchronously to avoid render‑blocking."
+              ],
+              "dependencies_or_inputs": [
+                "Figma or Sketch design mockups for all pages.",
+                "Copywriting text and approved images from the client.",
+                "Domain name and DNS access for final migration.",
+                "Hosting credentials (cPanel/SSH) and SSL certificate.",
+                "Elementor Pro license key."
+              ],
+              "validation_and_testing": [
+                "Perform a visual review against the mockups on multiple browsers.",
+                "Run Lighthouse audits for Performance, Accessibility, Best Practices, and SEO; address any failures.",
+                "Submit a test contact form entry and verify email receipt and entry in WPForms dashboard.",
+                "Check that all internal links are functional and that the sitemap is generated.",
+                "Obtain final client sign‑off before moving the site to production."
+              ]
+            },
+            {
+              "task_name": "VSS add common footer in stage",
+              "objective": "Implement a standardized footer across all pages of the VSS staging environment according to the provided specifications.",
+              "actions": [
+                "Review the footer specification document for required links, social icons, copyright text, and styling guidelines.",
+                "Create a footer template (e.g., footer.php) or an Elementor Global Widget that matches the design.",
+                "Add dynamic PHP code to display the current year and site name where needed.",
+                "Enqueue any additional CSS/JS required for the footer layout and ensure it loads only on the staging site.",
+                "Insert the footer template into the theme’s footer hook (wp_footer) or assign the Global Widget to the site’s Footer area.",
+                "Clear any caching layers (plugin cache, CDN) to make the new footer visible.",
+                "Perform a quick sanity check on a representative set of pages."
+              ],
+              "constraints_and_considerations": [
+                "Changes must be confined to the staging environment; production must remain untouched until approval.",
+                "Footer must be fully responsive and not cause horizontal overflow on small screens.",
+                "Code must follow WordPress coding standards and pass PHPCS checks.",
+                "Avoid conflicts with existing scripts or styles that could affect other components."
+              ],
+              "dependencies_or_inputs": [
+                "Design assets for the footer (icons, color palette).",
+                "List of URLs for footer navigation links.",
+                "Access to the VSS staging site (FTP/SFTP and WordPress admin).",
+                "Version‑control branch or staging deployment pipeline."
+              ],
+              "validation_and_testing": [
+                "Verify that the footer appears on every page of the staging site and matches the design spec.",
+                "Test all footer links to ensure they open the correct destinations.",
+                "Check the footer on mobile viewports for proper stacking and touch‑target size.",
+                "Run a CSS validator to ensure no errors are introduced.",
+                "Document the implementation and obtain stakeholder approval before promoting to production."
+              ]
+            },
+            {
+              "task_name": "Homepage Hero Section Implementation",
+              "objective": "Design and deploy a full‑width hero banner on the homepage with prominent call‑to‑action buttons, ensuring responsiveness and fast load times.",
+              "actions": [
+                "Collect the hero background image/illustration and headline/sub‑headline copy from the client.",
+                "Create a design mockup for the hero layout (full‑width background, overlay text, two CTA buttons).",
+                "Optimize the hero image (WebP, <500 KB) and generate appropriate srcset sizes.",
+                "Implement the hero section using Elementor or a custom PHP template with HTML5 and CSS3, applying a background‑image CSS rule for full‑width effect.",
+                "Add overlay with semi‑transparent layer to improve text readability.",
+                "Insert CTA buttons, style them per brand guidelines, and link to the specified target pages.",
+                "Attach Google Analytics event tracking to each CTA button (e.g., `gtag('event','click',{'event_category':'Hero CTA','event_label':'<Button Text>'});`).",
+                "Enable lazy loading for the hero image and set `loading='lazy'` where appropriate.",
+                "Test the hero across major browsers and device breakpoints; adjust CSS media queries for mobile stacking.",
+                "Clear cache and verify the hero loads within 2 seconds on a typical 3G connection."
+              ],
+              "constraints_and_considerations": [
+                "Image must meet accessibility contrast requirements when overlaid with text.",
+                "CTA button size must meet the 44 × 44 px minimum touch target for mobile.",
+                "The hero section should not increase the overall page load time beyond the performance budget.",
+                "All code must be responsive and not break existing homepage layout."
+              ],
+              "dependencies_or_inputs": [
+                "High‑resolution hero image or illustration.",
+                "Final copy for headline, sub‑headline, and CTA button text.",
+                "Target URLs for each CTA.",
+                "Access to the homepage template or Elementor editor.",
+                "Google Analytics tracking ID."
+              ],
+              "validation_and_testing": [
+                "View the homepage on desktop, tablet, and mobile to confirm full‑width display and proper text/button alignment.",
+                "Check that the hero image loads correctly with `srcset` and `loading='lazy'` attributes.",
+                "Trigger each CTA button and verify that the click event appears in the GA Real‑Time dashboard.",
+                "Run a Lighthouse performance audit; ensure the hero does not cause the First Contentful Paint to exceed 2 seconds.",
+                "Perform a contrast ratio test (minimum 4.5:1) for overlay text."
+              ]
+            },
+            {
+              "task_name": "Mobile Responsiveness Fixes",
+              "objective": "Resolve identified layout issues on major site pages and ensure a consistent, high‑quality mobile experience.",
+              "actions": [
+                "Compile a list of pages with reported mobile issues (home, product, blog, contact).",
+                "Use Chrome DevTools device emulator and real devices to document each visual problem (overflow, misaligned elements, tiny tap targets).",
+                "Create or adjust CSS media queries to address each issue (e.g., set `max-width: 100%` on images, modify flexbox direction).",
+                "Refactor any problematic HTML structures (e.g., replace fixed‑width tables with responsive equivalents).",
+                "Update touch target sizes to meet the 48 × 48 dp recommendation.",
+                "Run a full Lighthouse mobile audit after changes and address any remaining warnings (unused CSS, render‑blocking resources).",
+                "Perform regression testing on desktop to confirm no adverse effects.",
+                "Commit changes to version control and deploy to staging; once approved, push to production."
+              ],
+              "constraints_and_considerations": [
+                "Desktop layout must remain unchanged; use `@media` queries to isolate mobile fixes.",
+                "Do not remove or alter essential JavaScript functionality.",
+                "Maintain SEO integrity; avoid removing structured data or headings.",
+                "Follow the site’s existing CSS naming conventions and avoid !important overrides unless absolutely necessary."
+              ],
+              "dependencies_or_inputs": [
+                "Access to the code repository (Git) and deployment pipeline.",
+                "List of specific CSS selectors or components that are problematic.",
+                "Design guidelines for mobile breakpoints and spacing.",
+                "Browser testing tools (Chrome, Safari, Firefox)."
+              ],
+              "validation_and_testing": [
+                "Manually test each fixed page on at least three real mobile devices (iOS and Android) for visual correctness.",
+                "Run Lighthouse mobile audit and achieve a score of 90 or higher for Performance, Accessibility, and Best Practices.",
+                "Confirm that no JavaScript console errors appear after the CSS/HTML adjustments.",
+                "Check that all interactive elements are easily tappable and that no horizontal scrolling is possible.",
+                "Obtain stakeholder sign‑off that the mobile experience meets the project’s quality standards."
+              ]
+            }
+          ]
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Analyze and give action (Cloud LLM)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Analyze and give action (Cloud LLM)",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Task Data": {
+      "main": [
+        [
+          {
+            "node": "Formatting tasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatting tasks": {
+      "main": [
+        [
+          {
+            "node": "Summarize the task (Local LLM)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize the task (Local LLM)": {
+      "main": [
+        [
+          {
+            "node": "Analyze and give action (Cloud LLM)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze and give action (Cloud LLM)": {
+      "main": [
+        [
+          {
+            "node": "Arrange the task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Arrange the task": {
+      "main": [
+        [
+          {
+            "node": "Append in sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append in sheets": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "ead0c735-0f5f-4901-81f4-f63cb8eab531",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "59c459b1a6099976fed79f9b6ba5f0bfe7b4ace292af3ecabf89a067823e7c89"
+  },
+  "id": "Bp8xknRaZVxOlwWS09koj",
+  "tags": []
+}
