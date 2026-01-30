@@ -6,3 +6,6 @@ AI News Summary Docs : 🔗 https://docs.google.com/document/d/18yTsn76coPZVQeqd
 
 Tokenisation Assignment Workflow
 Tokenisation Assignment Sheet : 🔗 https://docs.google.com/spreadsheets/d/1lGihi9AgbPdbG8lGEUVgGVmmyfr4ie-tNQWo7iOTd40/edit?usp=sharing
+
+Task Action Creation using Local & Cloud LLM Workflow
+Task Action Creation using Local & Cloud LLM Sheet : 🔗 https://docs.google.com/spreadsheets/d/1VarNQBEGTY8HglT4QnP-PgmTGBERclR-83IjjXUclgE/edit?usp=sharing
