@@ -91,22 +91,34 @@
         <div class="chatbot-header">
             <div class="chatbot-header-info">
                 <div class="chatbot-avatar">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="8" r="4"></circle>
-                        <path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"></path>
-                    </svg>
+                    <img src="e2m-logo.png" alt="E2M Assistant" class="avatar-logo">
                 </div>
-                <div>
+                <div class="header-text">
                     <h3>E2M Assistant</h3>
                     <p class="status">Online</p>
                 </div>
             </div>
-            <button class="chatbot-close" id="chatbotClose" aria-label="Close Chatbot">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            </button>
+            <div class="header-actions">
+                <button class="chatbot-history" id="chatbotHistory" aria-label="Chat History" title="Recent Questions">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                </button>
+                <div class="history-dropdown" id="historyDropdown">
+                    <h4>Recent Questions</h4>
+                    <div class="history-list" id="historyList">
+                        <!-- Recent questions will be loaded here -->
+                        <div class="empty-history">No recent questions</div>
+                    </div>
+                </div>
+                <button class="chatbot-close" id="chatbotClose" aria-label="Close Chatbot">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
         </div>
 
         <div class="chatbot-body" id="chatbotBody">
@@ -114,7 +126,7 @@
             <div class="inline-registration" id="inlineRegistration" style="display: none;">
                 <div class="chat-message bot-message">
                     <div class="message-content">
-                        <p>👋 <strong>Welcome to E2M Solutions!</strong></p>
+                        <p><strong>Welcome to E2M Solutions</strong></p>
                         <p>Let's get started. Please share your details:</p>
                     </div>
                 </div>

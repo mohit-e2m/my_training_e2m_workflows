@@ -273,3 +273,193 @@ function showError(message) {
     console.error(message);
     // Could add toast notification here
 }
+
+// ===== Tab Switching =====
+const tabBtns = document.querySelectorAll('.tab-btn');
+const tabContents = document.querySelectorAll('.tab-content');
+
+tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        const tabName = btn.dataset.tab;
+
+        // Remove active class from all tabs and contents
+        tabBtns.forEach(b => b.classList.remove('active'));
+        tabContents.forEach(c => c.classList.remove('active'));
+
+        // Add active class to clicked tab and corresponding content
+        btn.classList.add('active');
+        document.getElementById(`${tabName}Tab`).classList.add('active');
+
+        // Load data for the tab
+        if (tabName === 'tickets') {
+            loadSupportTickets();
+        } else if (tabName === 'settings') {
+            loadSMTPSettings();
+        }
+    });
+});
+
+// ===== Support Tickets =====
+async function loadSupportTickets() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/tickets`);
+        const data = await response.json();
+
+        if (data.success) {
+            displaySupportTickets(data.tickets);
+        } else {
+            showError('Failed to load support tickets');
+        }
+    } catch (error) {
+        console.error('Error loading tickets:', error);
+        showError('Failed to connect to server');
+    }
+}
+
+function displaySupportTickets(tickets) {
+    const ticketsTableBody = document.getElementById('ticketsTableBody');
+
+    if (tickets.length === 0) {
+        ticketsTableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem; color: #9ca3af;">No support tickets yet</td></tr>';
+        return;
+    }
+
+    ticketsTableBody.innerHTML = tickets.map(ticket => `
+        <tr>
+            <td>#${ticket.id}</td>
+            <td>${ticket.user_id}</td>
+            <td>${escapeHtml(ticket.subject)}</td>
+            <td><span class="status-badge status-${ticket.status}">${ticket.status}</span></td>
+            <td>${formatDate(ticket.created_at)}</td>
+            <td>
+                <button class="btn-view-history" onclick="viewTicketDetails(${ticket.id}, '${escapeHtml(ticket.subject)}', '${escapeHtml(ticket.message)}')">
+                    View
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function viewTicketDetails(ticketId, subject, message) {
+    alert(`Ticket #${ticketId}\n\nSubject: ${subject}\n\nMessage:\n${message}`);
+}
+
+// ===== SMTP Settings =====
+async function loadSMTPSettings() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/smtp-settings`);
+        const data = await response.json();
+
+        if (data.success) {
+            populateSMTPForm(data.settings);
+        } else {
+            console.log('No SMTP settings found, using defaults');
+        }
+    } catch (error) {
+        console.error('Error loading SMTP settings:', error);
+    }
+}
+
+function populateSMTPForm(settings) {
+    document.getElementById('senderEmail').value = settings.sender_email || '';
+    document.getElementById('recipientEmail').value = settings.recipient_email || '';
+    document.getElementById('smtpServer').value = settings.smtp_server || '';
+    document.getElementById('smtpPort').value = settings.smtp_port || '';
+    document.getElementById('smtpUsername').value = settings.smtp_username || '';
+    document.getElementById('useSSL').checked = settings.use_ssl || false;
+    // Password is not returned for security
+}
+
+// SMTP Settings Form
+const smtpSettingsForm = document.getElementById('smtpSettingsForm');
+smtpSettingsForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const submitBtn = smtpSettingsForm.querySelector('.btn-save-settings');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Saving...';
+
+    const formData = {
+        sender_email: document.getElementById('senderEmail').value.trim(),
+        recipient_email: document.getElementById('recipientEmail').value.trim(),
+        smtp_server: document.getElementById('smtpServer').value.trim(),
+        smtp_port: parseInt(document.getElementById('smtpPort').value),
+        smtp_username: document.getElementById('smtpUsername').value.trim(),
+        smtp_password: document.getElementById('smtpPassword').value,
+        use_ssl: document.getElementById('useSSL').checked
+    };
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/smtp-settings`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            alert('SMTP settings saved successfully!');
+            // Clear password field for security
+            document.getElementById('smtpPassword').value = '';
+        } else {
+            throw new Error(data.error || 'Failed to save settings');
+        }
+    } catch (error) {
+        console.error('Error saving SMTP settings:', error);
+        alert('Failed to save SMTP settings: ' + error.message);
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    }
+});
+
+// Test Email Button
+const testEmailBtn = document.getElementById('testEmailBtn');
+testEmailBtn.addEventListener('click', async () => {
+    const recipientEmail = prompt('Enter email address to send test email to:');
+
+    if (!recipientEmail) {
+        return; // User cancelled
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(recipientEmail)) {
+        alert('Please enter a valid email address');
+        return;
+    }
+
+    const originalText = testEmailBtn.textContent;
+    testEmailBtn.disabled = true;
+    testEmailBtn.textContent = 'Sending...';
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/test-email`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                recipient_email: recipientEmail
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            alert(data.message);
+        } else {
+            throw new Error(data.error || 'Failed to send test email');
+        }
+    } catch (error) {
+        console.error('Error sending test email:', error);
+        alert('Failed to send test email: ' + error.message);
+    } finally {
+        testEmailBtn.disabled = false;
+        testEmailBtn.textContent = originalText;
+    }
+});
