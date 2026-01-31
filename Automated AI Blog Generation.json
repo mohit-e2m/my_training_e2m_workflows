@@ -3,25 +3,26 @@
   "nodes": [
     {
       "parameters": {
-        "jsCode": "// Get HTML and DEBUG what's actually there\nconst html = $input.first().json.html || $input.first().json.body || $input.first().json.data || '';\nconst url = $input.first().json.url || '';\n\nif (!html || html.length === 0) {\n  return [{ json: { error: 'No HTML input', url } }];\n}\n\nconst article = {\n  title: '',\n  content: '',\n  author: '',\n  date: '',\n  imageUrl: '',\n  url,\n  debug: {\n    htmlLength: html.length,\n    hasParagraphs: html.includes('<p>'),\n    hasDivs: html.includes('<div'),\n    hasArticle: html.includes('<article')\n  }\n};\n\n// ========== 1. FORCE TITLE EXTRACTION ==========\nconst allHeadings = html.match(/<h[1-6][^>]*>([\\s\\S]*?)<\\/h[1-6]>/gi) || [];\nconst titleCandidates = allHeadings.map(h => {\n  return (h.replace(/<[^>]*>/g, '').match(/[A-Z][a-zA-Z\\s\\-,]{10,100}/) || [''])[0];\n}).filter(t => t && t.length > 15 && !t.includes('Categories') && !t.includes('About'));\n\narticle.title = titleCandidates[0] || '';\n\n// ========== 2. NUCLEAR CONTENT EXTRACTION ==========\n// Strategy 1: Find ALL text between <p> tags\nlet content = '';\nconst paragraphs = html.match(/<p\\b[^<]*(?:(?!<\\/p\\b)[^<])*([^<]*(?:&[^;\\s]*;[^<]*)*)(?!<\\/p\\b)[^<]*<\\/p>/gi) || [];\n\nparagraphs.forEach(p => {\n  let text = p\n    .replace(/<a[^>]*>([^<]*)<\\/a>/gi, '$1')  // Keep link text\n    .replace(/<[^>]*>/g, ' ')                 // Remove all tags\n    .replace(/&nbsp;|&#160;/gi, ' ')\n    .replace(/&#8217;|&#x27;/gi, \"'\")\n    .replace(/&#8220;|&#8221;|\"/gi, '\"')\n    .replace(/&amp;/gi, '&')\n    .replace(/\\s+/g, ' ')\n    .trim();\n  \n  if (text.length > 30 && text.search(/[A-Za-z]{4,}/) > -1) {\n    content += text + '\\n\\n';\n  }\n});\n\n// Strategy 2: If no paragraphs, grab ALL text content\nif (content.length < 100) {\n  content = html\n    .replace(/<script\\b[\\s\\S]*?<\\/script>/gi, '')     // Remove scripts\n    .replace(/<style\\b[\\s\\S]*?<\\/style>/gi, '')      // Remove styles\n    .replace(/<!--[\\s\\S]*?-->/g, '')                // Remove comments\n    .replace(/<[^>]*>/g, ' ')                       // Remove ALL tags\n    .replace(/\\s+/g, ' ')\n    .trim();\n  \n  // Extract sentences (heuristic for real content)\n  const sentences = content.match(/[A-Z][^.!?]{50,}[.!?]+/g) || [];\n  content = sentences.slice(0, 20).join('\\n\\n');\n}\n\n// Strategy 3: FINAL fallback - grab ANY substantial text block\nif (content.length < 200) {\n  const textBlocks = html.match(/[a-zA-Z\\s\\-,]{100,1000}[.!?;]/g) || [];\n  content = textBlocks.slice(0, 15).join('\\n\\n');\n}\n\narticle.content = content.substring(0, 10000);\n\n// ========== 3. FORCE IMAGE ==========\nconst imgMatch = html.match(/https?:\\/\\/[^\"\\s<>]+\\.(?:png|jpg|jpeg|webp|gif)(?:\\?[^\"\\s<>]*)?(?=[ \"\\s<>])/i);\narticle.imageUrl = imgMatch ? imgMatch[0] : article.imageUrl;\n\n// ========== 4. FORCE AUTHOR ==========\nconst authorMatch = html.match(/(?:by|author|writer)[:\\s]*([A-Z][a-zA-Z\\s\\-\\.]{2,50})/i);\narticle.author = authorMatch ? authorMatch[1].trim() : '';\n\n// ========== 5. FORCE DATE ==========\nconst dateMatch = html.match(/\\d{4}-\\d{2}-\\d{2}|\\w+\\s+\\d{1,2},\\s+\\d{4}/);\narticle.date = dateMatch ? dateMatch[0] : article.date;\n\narticle.debug.contentLength = article.content.length;\narticle.debug.paragraphsFound = paragraphs.length;\n\nreturn [{ json: article }];"
+        "jsCode": "const html = $input.first().json.html || $input.first().json.body || $input.first().json.data || '';\nconst url = $input.first().json.url || '';\n\nif (!html) {\n  return [{ json: { error: 'No HTML input', url } }];\n}\n\n// ---------- TITLE ----------\nlet title = '';\nconst headings = html.match(/<h[1-2][^>]*>([\\s\\S]*?)<\\/h[1-2]>/gi) || [];\n\nfor (const h of headings) {\n  const clean = h.replace(/<[^>]*>/g, '').trim();\n  if (\n    clean.length > 20 &&\n    clean.length < 120 &&\n    !/home|menu|login|sign up|category/i.test(clean)\n  ) {\n    title = clean;\n    break;\n  }\n}\n\n// Fallback to <title>\nif (!title) {\n  const t = html.match(/<title[^>]*>(.*?)<\\/title>/i);\n  if (t) title = t[1].replace(/\\s+/g, ' ').trim();\n}\n\n// ---------- MAIN CONTENT ----------\nlet content = '';\n\n// Remove junk blocks first\nconst cleanedHtml = html\n  .replace(/<script[\\s\\S]*?<\\/script>/gi, '')\n  .replace(/<style[\\s\\S]*?<\\/style>/gi, '')\n  .replace(/<nav[\\s\\S]*?<\\/nav>/gi, '')\n  .replace(/<footer[\\s\\S]*?<\\/footer>/gi, '')\n  .replace(/<header[\\s\\S]*?<\\/header>/gi, '')\n  .replace(/<!--[\\s\\S]*?-->/g, '');\n\n// Grab paragraphs\nconst paragraphs = cleanedHtml.match(/<p\\b[^>]*>(.*?)<\\/p>/gi) || [];\n\nfor (const p of paragraphs) {\n  let text = p\n    .replace(/<a[^>]*>(.*?)<\\/a>/gi, '$1')\n    .replace(/<[^>]*>/g, ' ')\n    .replace(/&nbsp;|&#160;/gi, ' ')\n    .replace(/&amp;/gi, '&')\n    .replace(/\\s+/g, ' ')\n    .trim();\n\n  // ❌ FILTER OUT JUNK\n  const junkPatterns = [\n  /cookie/i,\n  /privacy policy/i,\n  /terms of service/i,\n  /accept/i,\n  /subscribe/i,\n  /newsletter/i,\n  /sign up/i,\n  /log in/i,\n  /related articles/i,\n  /more stories/i,\n  /follow us/i,\n  /advertisement/i,\n  /©/,\n  /all rights reserved/i\n];\n\nconst isJunk = junkPatterns.some(r => r.test(text));\n\nif (\n  text.length > 120 &&\n  !/^https?:\\/\\//i.test(text) &&\n  !/^\\d{4}-\\d{2}-\\d{2}$/.test(text) &&\n  !isJunk\n) {\n  content += text + '\\n\\n';\n}\n}\n\n// Fallback: extract meaningful sentences if paragraphs failed\nif (content.length < 300) {\n  const plain = cleanedHtml\n    .replace(/<[^>]+>/g, ' ')\n    .replace(/\\s+/g, ' ')\n    .trim();\n\n  const sentences = plain.match(/[A-Z][^.!?]{60,}[.!?]/g) || [];\n  content = sentences.slice(0, 25).join('\\n\\n');\n}\n\n// FINAL CLEAN\ncontent = content\n  .replace(/\\b\\d{4}-\\d{2}-\\d{2}\\b/g, '')   // remove dates\n  .replace(/https?:\\/\\/\\S+/g, '')         // remove URLs\n  .replace(/\\s+\\n/g, '\\n')\n  .trim()\n  .substring(0, 15000);\n\n// ---------- OUTPUT ONLY WHAT MATTERS ----------\nreturn [{\n  json: {\n    title,\n    content,\n    url\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1184,
-        -976
+        1120,
+        -836
       ],
       "id": "64495505-7fcb-454e-92e8-ec826f6a7f75",
       "name": "Filter content"
     },
     {
       "parameters": {
+        "modelName": "sentence-transformers/all-mpnet-base-v2",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.embeddingsHuggingFaceInference",
       "typeVersion": 1,
       "position": [
-        2128,
+        1552,
         -960
       ],
       "id": "cee960bf-dd58-4c45-9fb5-b7402f30aa54",
@@ -47,8 +48,8 @@
       "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
       "typeVersion": 1.3,
       "position": [
-        1120,
-        -1376
+        1416,
+        -680
       ],
       "id": "0c8f96f8-a4a6-427c-bc89-cf7b025a7a56",
       "name": "Supabase Vector Store",
@@ -61,19 +62,6 @@
     },
     {
       "parameters": {
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
-      "typeVersion": 1.1,
-      "position": [
-        1200,
-        -1152
-      ],
-      "id": "73cdf774-b73c-4cc4-9ec5-0efadec7a921",
-      "name": "Default Data Loader"
-    },
-    {
-      "parameters": {
         "promptType": "define",
         "text": "=Write a blog post based on the keyword: {{ $json.keyword }}\n\nSteps:\n1. Search the Supabase Vector knowledge base for \"{{ $json.keyword }}\" to retrieve relevant supporting information.\n2. Use that data to ground the article.\n3. Follow all system instructions and required structure.\n\nReturn only the blog post in clean Markdown.",
         "options": {
@@ -83,7 +71,7 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 2,
       "position": [
-        1952,
+        1376,
         -1392
       ],
       "id": "bb3f0ea0-952e-46ef-8b1e-1b712a7015ce",
@@ -104,7 +92,7 @@
       "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
       "typeVersion": 1.3,
       "position": [
-        2048,
+        1472,
         -1168
       ],
       "id": "1ac131a4-11ac-4556-af0d-96cb38d2f88a",
@@ -125,8 +113,8 @@
       "type": "n8n-nodes-base.markdown",
       "typeVersion": 1,
       "position": [
-        2416,
-        -1392
+        1840,
+        -1184
       ],
       "id": "a1ff9d13-b4b9-438f-950d-de91a7fb6211",
       "name": "Markdown"
@@ -138,8 +126,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2864,
-        -1392
+        2288,
+        -1184
       ],
       "id": "2cafa659-acb3-4bda-b203-0706c7095e57",
       "name": "Prepare_Request"
@@ -153,7 +141,7 @@
       "typeVersion": 2.1,
       "position": [
         -448,
-        -1344
+        -1088
       ],
       "id": "4d30b08d-b686-402d-bdf1-84eef0c8e47b",
       "name": "Wait for trigger",
@@ -167,7 +155,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
       "typeVersion": 1,
       "position": [
-        1920,
+        1344,
         -1168
       ],
       "id": "2511af63-3e20-423a-9ce6-f0cfc4c0bef8",
@@ -197,7 +185,7 @@
       "typeVersion": 3.4,
       "position": [
         -224,
-        -1344
+        -1088
       ],
       "id": "bae44430-cb98-45a3-aba6-1b1303638ba8",
       "name": "Filter Out Keyword"
@@ -234,27 +222,27 @@
       "typeVersion": 4.3,
       "position": [
         0,
-        -1072
+        -800
       ],
       "id": "d3952d8e-8c58-4a4c-9ef8-8c28894b28d0",
       "name": "Fetchs URL"
     },
     {
       "parameters": {
-        "jsCode": "const blocked = [\"youtube.com\", \"facebook.com\", \"twitter.com\", \"instagram.com\", \"reddit.com\"];\n\nconst results = $json.organic;\n\nconst urls = results\n  .map(r => ({\n    url: r.link,\n    title: r.title,\n    snippet: r.snippet\n  }))\n  .filter(r => !blocked.some(b => r.url.includes(b)))\n  .slice(0, 5);\n\n// Create an array of objects with url1, title1, snippet1, etc.\nconst formattedUrls = urls.map((u, index) => ({\n  [`url${index + 1}`]: u.url,\n  [`title${index + 1}`]: u.title,\n  [`snippet${index + 1}`]: u.snippet\n}));\n\n// Return the formatted array\nreturn formattedUrls;"
+        "jsCode": "const blocked = [\"youtube.com\", \"facebook.com\", \"twitter.com\", \"instagram.com\", \"reddit.com\"];\n\nconst urls = $json.organic\n  .filter(r => !blocked.some(b => r.link.includes(b)))\n  .slice(0, 5)\n  .map(r => ({\n    url: r.link,\n    title: r.title,\n    snippet: r.snippet\n  }));\n\nreturn urls;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
         224,
-        -1072
+        -800
       ],
       "id": "57d084ae-8b5c-4805-8f48-6d5b00d45662",
       "name": "Top 5 URLs"
     },
     {
       "parameters": {
-        "url": "https://www.wishup.co/blog/15-apps-and-tools-to-help-managers-track-remote-work-productivity/",
+        "url": "={{ $json.url }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -264,16 +252,23 @@
             }
           ]
         },
-        "options": {}
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        448,
-        -1072
+        896,
+        -836
       ],
       "id": "0bab6b97-96f6-47a1-bfc1-5cbc23920e93",
       "name": "Scrap URLs",
+      "retryOnFail": false,
       "onError": "continueRegularOutput"
     },
     {
@@ -283,8 +278,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1696,
-        -1392
+        1120,
+        -1184
       ],
       "id": "7f4c8b83-d4a2-4162-88dd-e1ed43f16136",
       "name": "Keyword Out"
@@ -318,8 +313,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2640,
-        -1392
+        2064,
+        -1184
       ],
       "id": "68735a62-fe9d-4e44-96ae-2188d1b69897",
       "name": "set_fields_for_google",
@@ -353,8 +348,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        3088,
-        -1392
+        2512,
+        -1184
       ],
       "id": "ff557cdf-66b5-4101-967c-d440d0148a61",
       "name": "Create & Append to Docs",
@@ -375,37 +370,11 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        1472,
-        -1392
+        896,
+        -1184
       ],
       "id": "9a0b8749-b0f0-46ae-bed7-3eefd81795b7",
       "name": "Wait to Store Supabase"
-    },
-    {
-      "parameters": {
-        "options": {}
-      },
-      "type": "n8n-nodes-base.splitInBatches",
-      "typeVersion": 3,
-      "position": [
-        672,
-        -1072
-      ],
-      "id": "fdbe1b32-1fb3-41d0-a788-2a5a9526a6a3",
-      "name": "Loop for Scrap"
-    },
-    {
-      "parameters": {
-        "options": {}
-      },
-      "type": "n8n-nodes-base.splitInBatches",
-      "typeVersion": 3,
-      "position": [
-        896,
-        -1072
-      ],
-      "id": "ba0bff72-806e-40bb-873b-bf66628a35a5",
-      "name": "Loop for Filter"
     },
     {
       "parameters": {
@@ -423,8 +392,8 @@
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.4,
       "position": [
-        3312,
-        -1392
+        2736,
+        -1184
       ],
       "id": "4bd671b7-7125-44e7-9e71-700668030bf2",
       "name": "Send Blog to Slack",
@@ -435,6 +404,47 @@
           "name": "Mohit_slack_e2m_TESTBOT"
         }
       }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        1488,
+        -456
+      ],
+      "id": "dcd8276e-1ca4-434d-b5aa-4c24d47ce1f9",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "url",
+        "include": "allOtherFields",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        448,
+        -800
+      ],
+      "id": "004a9aa8-a640-47e9-94b2-37c13a017ea7",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        672,
+        -800
+      ],
+      "id": "9fda0302-d637-4f54-9298-278f24ce0d91",
+      "name": "Loop Over Items"
     }
   ],
   "pinData": {
@@ -457,13 +467,10 @@
           "params": {},
           "query": {},
           "body": {
-            "keyword": "Latest Tech"
+            "keyword": "India Latest Tech News"
           },
           "webhookUrl": "https://intervolute-nonplausible-lelia.ngrok-free.dev/webhook-test/blog/generation",
           "executionMode": "test"
-        },
-        "pairedItem": {
-          "item": 0
         }
       }
     ]
@@ -473,7 +480,7 @@
       "main": [
         [
           {
-            "node": "Loop for Filter",
+            "node": "Supabase Vector Store",
             "type": "main",
             "index": 0
           }
@@ -484,24 +491,13 @@
       "ai_embedding": [
         [
           {
-            "node": "Supabase Vector Store",
+            "node": "Supabase Vector Store1",
             "type": "ai_embedding",
             "index": 0
           },
           {
-            "node": "Supabase Vector Store1",
-            "type": "ai_embedding",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Default Data Loader": {
-      "ai_document": [
-        [
-          {
             "node": "Supabase Vector Store",
-            "type": "ai_document",
+            "type": "ai_embedding",
             "index": 0
           }
         ]
@@ -566,9 +562,9 @@
       "main": [
         [
           {
-            "node": "Wait to Store Supabase",
+            "node": "Loop Over Items",
             "type": "main",
-            "index": 1
+            "index": 0
           }
         ]
       ]
@@ -615,7 +611,7 @@
       "main": [
         [
           {
-            "node": "Scrap URLs",
+            "node": "Split Out",
             "type": "main",
             "index": 0
           }
@@ -626,7 +622,7 @@
       "main": [
         [
           {
-            "node": "Loop for Scrap",
+            "node": "Filter content",
             "type": "main",
             "index": 0
           }
@@ -666,47 +662,51 @@
         ]
       ]
     },
-    "Loop for Scrap": {
-      "main": [
-        [
-          {
-            "node": "Loop for Filter",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Scrap URLs",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Loop for Filter": {
-      "main": [
-        [
-          {
-            "node": "Supabase Vector Store",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Filter content",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Create & Append to Docs": {
       "main": [
         [
           {
             "node": "Send Blog to Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Wait to Store Supabase",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Scrap URLs",
             "type": "main",
             "index": 0
           }
@@ -719,7 +719,7 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "ed8d91ed-ffa7-492d-b72c-28d406e89831",
+  "versionId": "86627339-355b-4186-a147-0d5e215c70cd",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "59c459b1a6099976fed79f9b6ba5f0bfe7b4ace292af3ecabf89a067823e7c89"
