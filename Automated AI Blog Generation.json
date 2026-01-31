@@ -3,19 +3,6 @@
   "nodes": [
     {
       "parameters": {
-        "options": {}
-      },
-      "type": "n8n-nodes-base.splitInBatches",
-      "typeVersion": 3,
-      "position": [
-        672,
-        -1072
-      ],
-      "id": "fdbe1b32-1fb3-41d0-a788-2a5a9526a6a3",
-      "name": "Loop Over Items"
-    },
-    {
-      "parameters": {
         "jsCode": "// Get HTML and DEBUG what's actually there\nconst html = $input.first().json.html || $input.first().json.body || $input.first().json.data || '';\nconst url = $input.first().json.url || '';\n\nif (!html || html.length === 0) {\n  return [{ json: { error: 'No HTML input', url } }];\n}\n\nconst article = {\n  title: '',\n  content: '',\n  author: '',\n  date: '',\n  imageUrl: '',\n  url,\n  debug: {\n    htmlLength: html.length,\n    hasParagraphs: html.includes('<p>'),\n    hasDivs: html.includes('<div'),\n    hasArticle: html.includes('<article')\n  }\n};\n\n// ========== 1. FORCE TITLE EXTRACTION ==========\nconst allHeadings = html.match(/<h[1-6][^>]*>([\\s\\S]*?)<\\/h[1-6]>/gi) || [];\nconst titleCandidates = allHeadings.map(h => {\n  return (h.replace(/<[^>]*>/g, '').match(/[A-Z][a-zA-Z\\s\\-,]{10,100}/) || [''])[0];\n}).filter(t => t && t.length > 15 && !t.includes('Categories') && !t.includes('About'));\n\narticle.title = titleCandidates[0] || '';\n\n// ========== 2. NUCLEAR CONTENT EXTRACTION ==========\n// Strategy 1: Find ALL text between <p> tags\nlet content = '';\nconst paragraphs = html.match(/<p\\b[^<]*(?:(?!<\\/p\\b)[^<])*([^<]*(?:&[^;\\s]*;[^<]*)*)(?!<\\/p\\b)[^<]*<\\/p>/gi) || [];\n\nparagraphs.forEach(p => {\n  let text = p\n    .replace(/<a[^>]*>([^<]*)<\\/a>/gi, '$1')  // Keep link text\n    .replace(/<[^>]*>/g, ' ')                 // Remove all tags\n    .replace(/&nbsp;|&#160;/gi, ' ')\n    .replace(/&#8217;|&#x27;/gi, \"'\")\n    .replace(/&#8220;|&#8221;|\"/gi, '\"')\n    .replace(/&amp;/gi, '&')\n    .replace(/\\s+/g, ' ')\n    .trim();\n  \n  if (text.length > 30 && text.search(/[A-Za-z]{4,}/) > -1) {\n    content += text + '\\n\\n';\n  }\n});\n\n// Strategy 2: If no paragraphs, grab ALL text content\nif (content.length < 100) {\n  content = html\n    .replace(/<script\\b[\\s\\S]*?<\\/script>/gi, '')     // Remove scripts\n    .replace(/<style\\b[\\s\\S]*?<\\/style>/gi, '')      // Remove styles\n    .replace(/<!--[\\s\\S]*?-->/g, '')                // Remove comments\n    .replace(/<[^>]*>/g, ' ')                       // Remove ALL tags\n    .replace(/\\s+/g, ' ')\n    .trim();\n  \n  // Extract sentences (heuristic for real content)\n  const sentences = content.match(/[A-Z][^.!?]{50,}[.!?]+/g) || [];\n  content = sentences.slice(0, 20).join('\\n\\n');\n}\n\n// Strategy 3: FINAL fallback - grab ANY substantial text block\nif (content.length < 200) {\n  const textBlocks = html.match(/[a-zA-Z\\s\\-,]{100,1000}[.!?;]/g) || [];\n  content = textBlocks.slice(0, 15).join('\\n\\n');\n}\n\narticle.content = content.substring(0, 10000);\n\n// ========== 3. FORCE IMAGE ==========\nconst imgMatch = html.match(/https?:\\/\\/[^\"\\s<>]+\\.(?:png|jpg|jpeg|webp|gif)(?:\\?[^\"\\s<>]*)?(?=[ \"\\s<>])/i);\narticle.imageUrl = imgMatch ? imgMatch[0] : article.imageUrl;\n\n// ========== 4. FORCE AUTHOR ==========\nconst authorMatch = html.match(/(?:by|author|writer)[:\\s]*([A-Z][a-zA-Z\\s\\-\\.]{2,50})/i);\narticle.author = authorMatch ? authorMatch[1].trim() : '';\n\n// ========== 5. FORCE DATE ==========\nconst dateMatch = html.match(/\\d{4}-\\d{2}-\\d{2}|\\w+\\s+\\d{1,2},\\s+\\d{4}/);\narticle.date = dateMatch ? dateMatch[0] : article.date;\n\narticle.debug.contentLength = article.content.length;\narticle.debug.paragraphsFound = paragraphs.length;\n\nreturn [{ json: article }];"
       },
       "type": "n8n-nodes-base.code",
@@ -26,19 +13,6 @@
       ],
       "id": "64495505-7fcb-454e-92e8-ec826f6a7f75",
       "name": "Filter content"
-    },
-    {
-      "parameters": {
-        "options": {}
-      },
-      "type": "n8n-nodes-base.splitInBatches",
-      "typeVersion": 3,
-      "position": [
-        896,
-        -1072
-      ],
-      "id": "ba0bff72-806e-40bb-873b-bf66628a35a5",
-      "name": "Loop Over Items1"
     },
     {
       "parameters": {
@@ -184,17 +158,6 @@
       "id": "4d30b08d-b686-402d-bdf1-84eef0c8e47b",
       "name": "Wait for trigger",
       "webhookId": "fc5b1678-a97a-441d-ae31-02663d4b268a"
-    },
-    {
-      "parameters": {},
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        1472,
-        -1392
-      ],
-      "id": "9a0b8749-b0f0-46ae-bed7-3eefd81795b7",
-      "name": "Merge"
     },
     {
       "parameters": {
@@ -406,6 +369,43 @@
           "name": "Google Docs account"
         }
       }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1472,
+        -1392
+      ],
+      "id": "9a0b8749-b0f0-46ae-bed7-3eefd81795b7",
+      "name": "Wait to Store Supabase"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        672,
+        -1072
+      ],
+      "id": "fdbe1b32-1fb3-41d0-a788-2a5a9526a6a3",
+      "name": "Loop for Scrap"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        896,
+        -1072
+      ],
+      "id": "ba0bff72-806e-40bb-873b-bf66628a35a5",
+      "name": "Loop for Filter"
     }
   ],
   "pinData": {
@@ -440,47 +440,11 @@
     ]
   },
   "connections": {
-    "Loop Over Items": {
-      "main": [
-        [
-          {
-            "node": "Loop Over Items1",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Scrap URLs",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Filter content": {
       "main": [
         [
           {
-            "node": "Loop Over Items1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Loop Over Items1": {
-      "main": [
-        [
-          {
-            "node": "Supabase Vector Store",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Filter content",
+            "node": "Loop for Filter",
             "type": "main",
             "index": 0
           }
@@ -573,20 +537,9 @@
       "main": [
         [
           {
-            "node": "Merge",
+            "node": "Wait to Store Supabase",
             "type": "main",
             "index": 1
-          }
-        ]
-      ]
-    },
-    "Merge": {
-      "main": [
-        [
-          {
-            "node": "Keyword Out",
-            "type": "main",
-            "index": 0
           }
         ]
       ]
@@ -611,7 +564,7 @@
             "index": 0
           },
           {
-            "node": "Merge",
+            "node": "Wait to Store Supabase",
             "type": "main",
             "index": 0
           }
@@ -644,7 +597,7 @@
       "main": [
         [
           {
-            "node": "Loop Over Items",
+            "node": "Loop for Scrap",
             "type": "main",
             "index": 0
           }
@@ -672,6 +625,53 @@
           }
         ]
       ]
+    },
+    "Wait to Store Supabase": {
+      "main": [
+        [
+          {
+            "node": "Keyword Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop for Scrap": {
+      "main": [
+        [
+          {
+            "node": "Loop for Filter",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Scrap URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop for Filter": {
+      "main": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Filter content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
@@ -679,7 +679,7 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "37671a24-fbf3-4c9c-8f4a-308fc80adf17",
+  "versionId": "162970c9-2236-4afb-a831-076355cd1faf",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "59c459b1a6099976fed79f9b6ba5f0bfe7b4ace292af3ecabf89a067823e7c89"
