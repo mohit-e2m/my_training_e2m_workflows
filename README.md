@@ -9,3 +9,6 @@ Tokenisation Assignment Sheet : 🔗 https://docs.google.com/spreadsheets/d/1lGi
 
 Task Action Creation using Local & Cloud LLM Workflow
 Task Action Creation using Local & Cloud LLM Sheet : 🔗 https://docs.google.com/spreadsheets/d/1VarNQBEGTY8HglT4QnP-PgmTGBERclR-83IjjXUclgE/edit?usp=sharing
+
+Automated AI Blog Generation Workflow
+Automated AI Blog Generation Folder : 🔗 https://drive.google.com/drive/folders/1d1B_OUzu6n4LTA_8F6bE9RVAZy77zGoi
