@@ -1,0 +1,689 @@
+{
+  "name": "Automated AI Blog Generation",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        672,
+        -1072
+      ],
+      "id": "fdbe1b32-1fb3-41d0-a788-2a5a9526a6a3",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get HTML and DEBUG what's actually there\nconst html = $input.first().json.html || $input.first().json.body || $input.first().json.data || '';\nconst url = $input.first().json.url || '';\n\nif (!html || html.length === 0) {\n  return [{ json: { error: 'No HTML input', url } }];\n}\n\nconst article = {\n  title: '',\n  content: '',\n  author: '',\n  date: '',\n  imageUrl: '',\n  url,\n  debug: {\n    htmlLength: html.length,\n    hasParagraphs: html.includes('<p>'),\n    hasDivs: html.includes('<div'),\n    hasArticle: html.includes('<article')\n  }\n};\n\n// ========== 1. FORCE TITLE EXTRACTION ==========\nconst allHeadings = html.match(/<h[1-6][^>]*>([\\s\\S]*?)<\\/h[1-6]>/gi) || [];\nconst titleCandidates = allHeadings.map(h => {\n  return (h.replace(/<[^>]*>/g, '').match(/[A-Z][a-zA-Z\\s\\-,]{10,100}/) || [''])[0];\n}).filter(t => t && t.length > 15 && !t.includes('Categories') && !t.includes('About'));\n\narticle.title = titleCandidates[0] || '';\n\n// ========== 2. NUCLEAR CONTENT EXTRACTION ==========\n// Strategy 1: Find ALL text between <p> tags\nlet content = '';\nconst paragraphs = html.match(/<p\\b[^<]*(?:(?!<\\/p\\b)[^<])*([^<]*(?:&[^;\\s]*;[^<]*)*)(?!<\\/p\\b)[^<]*<\\/p>/gi) || [];\n\nparagraphs.forEach(p => {\n  let text = p\n    .replace(/<a[^>]*>([^<]*)<\\/a>/gi, '$1')  // Keep link text\n    .replace(/<[^>]*>/g, ' ')                 // Remove all tags\n    .replace(/&nbsp;|&#160;/gi, ' ')\n    .replace(/&#8217;|&#x27;/gi, \"'\")\n    .replace(/&#8220;|&#8221;|\"/gi, '\"')\n    .replace(/&amp;/gi, '&')\n    .replace(/\\s+/g, ' ')\n    .trim();\n  \n  if (text.length > 30 && text.search(/[A-Za-z]{4,}/) > -1) {\n    content += text + '\\n\\n';\n  }\n});\n\n// Strategy 2: If no paragraphs, grab ALL text content\nif (content.length < 100) {\n  content = html\n    .replace(/<script\\b[\\s\\S]*?<\\/script>/gi, '')     // Remove scripts\n    .replace(/<style\\b[\\s\\S]*?<\\/style>/gi, '')      // Remove styles\n    .replace(/<!--[\\s\\S]*?-->/g, '')                // Remove comments\n    .replace(/<[^>]*>/g, ' ')                       // Remove ALL tags\n    .replace(/\\s+/g, ' ')\n    .trim();\n  \n  // Extract sentences (heuristic for real content)\n  const sentences = content.match(/[A-Z][^.!?]{50,}[.!?]+/g) || [];\n  content = sentences.slice(0, 20).join('\\n\\n');\n}\n\n// Strategy 3: FINAL fallback - grab ANY substantial text block\nif (content.length < 200) {\n  const textBlocks = html.match(/[a-zA-Z\\s\\-,]{100,1000}[.!?;]/g) || [];\n  content = textBlocks.slice(0, 15).join('\\n\\n');\n}\n\narticle.content = content.substring(0, 10000);\n\n// ========== 3. FORCE IMAGE ==========\nconst imgMatch = html.match(/https?:\\/\\/[^\"\\s<>]+\\.(?:png|jpg|jpeg|webp|gif)(?:\\?[^\"\\s<>]*)?(?=[ \"\\s<>])/i);\narticle.imageUrl = imgMatch ? imgMatch[0] : article.imageUrl;\n\n// ========== 4. FORCE AUTHOR ==========\nconst authorMatch = html.match(/(?:by|author|writer)[:\\s]*([A-Z][a-zA-Z\\s\\-\\.]{2,50})/i);\narticle.author = authorMatch ? authorMatch[1].trim() : '';\n\n// ========== 5. FORCE DATE ==========\nconst dateMatch = html.match(/\\d{4}-\\d{2}-\\d{2}|\\w+\\s+\\d{1,2},\\s+\\d{4}/);\narticle.date = dateMatch ? dateMatch[0] : article.date;\n\narticle.debug.contentLength = article.content.length;\narticle.debug.paragraphsFound = paragraphs.length;\n\nreturn [{ json: article }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1184,
+        -976
+      ],
+      "id": "64495505-7fcb-454e-92e8-ec826f6a7f75",
+      "name": "Filter content"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        896,
+        -1072
+      ],
+      "id": "ba0bff72-806e-40bb-873b-bf66628a35a5",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsHuggingFaceInference",
+      "typeVersion": 1,
+      "position": [
+        2128,
+        -960
+      ],
+      "id": "cee960bf-dd58-4c45-9fb5-b7402f30aa54",
+      "name": "Embeddings HuggingFace Inference",
+      "credentials": {
+        "huggingFaceApi": {
+          "id": "AQEGA7mi2jsbc14u",
+          "name": "HuggingFaceApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        1120,
+        -1376
+      ],
+      "id": "0c8f96f8-a4a6-427c-bc89-cf7b025a7a56",
+      "name": "Supabase Vector Store",
+      "credentials": {
+        "supabaseApi": {
+          "id": "qXMOOwBPZ5bv2qHU",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        1200,
+        -1152
+      ],
+      "id": "73cdf774-b73c-4cc4-9ec5-0efadec7a921",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Write a blog post based on the keyword: {{ $json.keyword }}\n\nSteps:\n1. Search the Supabase Vector knowledge base for \"{{ $json.keyword }}\" to retrieve relevant supporting information.\n2. Use that data to ground the article.\n3. Follow all system instructions and required structure.\n\nReturn only the blog post in clean Markdown.",
+        "options": {
+          "systemMessage": "=You are an expert SEO Blog Writer, Content Strategist, and SEO Copywriter specializing in AI and technology.\n\nYou have access to a Supabase Vector Store knowledge base. When a keyword is provided, you MUST retrieve relevant facts, technical insights, or examples from the knowledge base and use them to ground the article in real information.\n\nIf the knowledge base returns limited data, you may supplement with general industry knowledge, but prioritize retrieved context.\n\nYour goal is to write a comprehensive, high-quality, search-optimized blog post.\n\n------------------------\nBLOG REQUIREMENTS\n------------------------\n\nLength: 1500–2000 words\n\nTone: Professional yet conversational (use \"you\" and \"we\")\n\nSEO Rules:\n- Naturally use the keyword in:\n  - H1 title\n  - First paragraph\n  - At least one H2\n- Avoid keyword stuffing\n- Write for humans first, SEO second\n\n------------------------\nSTRUCTURE (MANDATORY)\n------------------------\n\n# H1 Title  \nEngaging, clear, and keyword-optimized\n\n## Introduction  \nHook the reader and clearly introduce the topic and keyword\n\n## H2 Sections  \nMultiple detailed sections exploring different aspects of the topic\n\n### Use bullet lists where helpful\n\n## FAQ Section  \nAnswer common, relevant questions related to the keyword\n\n## Conclusion  \nStrong wrap-up + light CTA encouraging engagement or action\n\n------------------------\nKNOWLEDGE BASE USAGE (CRITICAL)\n------------------------\n\nYou MUST:\n1. Use the Supabase Vector Store retrieval tool to search for context related to the keyword.\n2. Incorporate retrieved facts, explanations, or examples naturally into the article.\n3. Do NOT mention the database or retrieval process in the final output.\n\nOutput must be clean Markdown. Output ONLY the blog post."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        1952,
+        -1392
+      ],
+      "id": "bb3f0ea0-952e-46ef-8b1e-1b712a7015ce",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Search using the vector Data",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list"
+        },
+        "topK": 10,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        2048,
+        -1168
+      ],
+      "id": "1ac131a4-11ac-4556-af0d-96cb38d2f88a",
+      "name": "Supabase Vector Store1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "qXMOOwBPZ5bv2qHU",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "markdownToHtml",
+        "markdown": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.markdown",
+      "typeVersion": 1,
+      "position": [
+        2416,
+        -1392
+      ],
+      "id": "a1ff9d13-b4b9-438f-950d-de91a7fb6211",
+      "name": "Markdown"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Simple HTML to Google Drive converter with link preservation\nconst boundary = 'divider';\nconst docName = $input.first().json.document_name;\nconst folderId = $input.first().json.drive_folder_id;\nconst htmlContent = $input.first().json.html_content;\n\n// Process HTML to ensure links are preserved\nfunction preserveLinks(htmlContent) {\n    // Ensure all links have proper attributes for Google Drive\n    let processedHtml = htmlContent;\n    \n    // Fix any malformed or incomplete link tags\n    processedHtml = processedHtml.replace(/<a\\s+href=[\"']([^\"']+)[\"'][^>]*>(.*?)<\\/a>/gi, '<a href=\"$1\">$2</a>');\n    \n    // Ensure links have proper protocol\n    processedHtml = processedHtml.replace(/<a\\s+href=[\"'](?!https?:\\/\\/|mailto:|tel:)([^\"']+)[\"']>/gi, '<a href=\"https://$1\">');\n    \n    return processedHtml;\n}\n\nconst metadata = JSON.stringify({\n  name: docName,\n  mimeType: \"application/vnd.google-apps.document\",\n  parents: [folderId]\n});\n\n// Process the HTML content to preserve links\nconst processedHtmlContent = preserveLinks(htmlContent);\n\nconst htmlWithStyles = `\n<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"UTF-8\">\n  <style>\n    /* Add bottom margin to block elements for spacing */\n    p,\n    ul,\n    ol,\n    table,\n    h1,\n    h2,\n    h3,\n    h4,\n    h5,\n    h6 {\n      margin-bottom: 10pt;\n    }\n    h2 {\n      margin-top: 20pt;\n    }\n    /* Prevent margin collapse issues or excessive space inside lists */\n    li {\n       margin-bottom: 2pt; /* Optional: small space between list items */\n    }\n    /* Ensure links are styled properly for Google Drive */\n    a {\n      color: #1155cc;\n      text-decoration: underline;\n    }\n    /* Remove margin from the last child within common containers if needed */\n    /* This might be overly aggressive, test without it first */\n    /*\n    body > *:last-child,\n    li > *:last-child {\n       margin-bottom: 0;\n    }\n    */\n  </style>\n</head>\n<body>\n  ${processedHtmlContent}\n</body>\n</html>\n`;\n\n// Construct the body with literal \\r\\n ONLY\nlet body = `--${boundary}\\r\\n`;\nbody += `Content-Type: application/json; charset=UTF-8\\r\\n`;\nbody += `\\r\\n`; // Blank line\nbody += `${metadata}\\r\\n`;\nbody += `--${boundary}\\r\\n`;\nbody += `Content-Type: text/html\\r\\n`;\nbody += `\\r\\n`; // Blank line\nbody += `${htmlWithStyles}\\r\\n`; // Add the HTML content\nbody += `--${boundary}--\\r\\n`; // Final boundary\n\nreturn {\n  rawData: body \n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2864,
+        -1392
+      ],
+      "id": "2cafa659-acb3-4bda-b203-0706c7095e57",
+      "name": "Prepare_Request"
+    },
+    {
+      "parameters": {
+        "path": "blog/generation",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -448,
+        -1344
+      ],
+      "id": "4d30b08d-b686-402d-bdf1-84eef0c8e47b",
+      "name": "Wait for trigger",
+      "webhookId": "fc5b1678-a97a-441d-ae31-02663d4b268a"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1472,
+        -1392
+      ],
+      "id": "9a0b8749-b0f0-46ae-bed7-3eefd81795b7",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1824,
+        -1184
+      ],
+      "id": "2511af63-3e20-423a-9ce6-f0cfc4c0bef8",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "lp6K0eOPcvjsaxjW",
+          "name": "Groq account e2m"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "69bbfdc5-06a1-417a-8de5-0675e8240a68",
+              "name": "keyword",
+              "value": "={{ $json.body.keyword }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -224,
+        -1344
+      ],
+      "id": "bae44430-cb98-45a3-aba6-1b1303638ba8",
+      "name": "Filter Out Keyword"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://google.serper.dev/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-KEY",
+              "value": "94e354be5c8d04eec4ea3f7d543cab6a5713d57c"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ $json.keyword }}"
+            }
+          ]
+        },
+        "options": {
+          "redirect": {
+            "redirect": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        0,
+        -1072
+      ],
+      "id": "d3952d8e-8c58-4a4c-9ef8-8c28894b28d0",
+      "name": "Fetchs URL"
+    },
+    {
+      "parameters": {
+        "jsCode": "const blocked = [\"youtube.com\", \"facebook.com\", \"twitter.com\", \"instagram.com\", \"reddit.com\"];\n\nconst results = $json.organic;\n\nconst urls = results\n  .map(r => ({\n    url: r.link,\n    title: r.title,\n    snippet: r.snippet\n  }))\n  .filter(r => !blocked.some(b => r.url.includes(b)))\n  .slice(0, 5);\n\n// Create an array of objects with url1, title1, snippet1, etc.\nconst formattedUrls = urls.map((u, index) => ({\n  [`url${index + 1}`]: u.url,\n  [`title${index + 1}`]: u.title,\n  [`snippet${index + 1}`]: u.snippet\n}));\n\n// Return the formatted array\nreturn formattedUrls;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        -1072
+      ],
+      "id": "57d084ae-8b5c-4805-8f48-6d5b00d45662",
+      "name": "Top 5 URLs"
+    },
+    {
+      "parameters": {
+        "url": "https://www.wishup.co/blog/15-apps-and-tools-to-help-managers-track-remote-work-productivity/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozila 5.0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        448,
+        -1072
+      ],
+      "id": "0bab6b97-96f6-47a1-bfc1-5cbc23920e93",
+      "name": "Scrap URLs",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst found = items.find(item => item.json.keyword);\n\nreturn [\n  {\n    json: {\n      keyword: found ? found.json.keyword : null\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1696,
+        -1392
+      ],
+      "id": "7f4c8b83-d4a2-4162-88dd-e1ed43f16136",
+      "name": "Keyword Out"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e7ee03ac-13e3-4fca-a7bc-57c8fc56dc42",
+              "name": "document_name",
+              "value": "=Blog: {{ $json.output.match(/^#\\s(.+)/)[1].trim() }}\n\n\n",
+              "type": "string"
+            },
+            {
+              "id": "48a07ef2-ae46-4bfc-aa7e-d92a74ef46d6",
+              "name": "html_content",
+              "value": "={{ $json.data }}",
+              "type": "string"
+            },
+            {
+              "id": "22b02fba-ba72-423a-b92f-1191a183a554",
+              "name": "drive_folder_id",
+              "value": "1d1B_OUzu6n4LTA_8F6bE9RVAZy77zGoi",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2640,
+        -1392
+      ],
+      "id": "68735a62-fe9d-4e44-96ae-2188d1b69897",
+      "name": "set_fields_for_google",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.googleapis.com/upload/drive/v3/files/",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDocsOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "uploadType",
+              "value": "multipart"
+            },
+            {
+              "name": "supportsAllDrives",
+              "value": "true"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "multipart/related; boundary=divider",
+        "body": "={{ $json.rawData }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3088,
+        -1392
+      ],
+      "id": "ff557cdf-66b5-4101-967c-d440d0148a61",
+      "name": "Create & Append to Docs",
+      "notesInFlow": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "7myoFENk6VCeDrnC",
+          "name": "Google Drive account"
+        },
+        "googleDocsOAuth2Api": {
+          "id": "RG0tZnE2A7d7Fq6t",
+          "name": "Google Docs account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Wait for trigger": [
+      {
+        "json": {
+          "headers": {
+            "host": "intervolute-nonplausible-lelia.ngrok-free.dev",
+            "user-agent": "PostmanRuntime/7.51.1",
+            "content-length": "149",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate, br",
+            "cache-control": "no-cache",
+            "content-type": "multipart/form-data; boundary=----WebKitFormBoundaryaqaHzu21pdXPeEB8",
+            "postman-token": "f7346a9c-d8b6-4297-a882-9815b6c61bad",
+            "x-forwarded-for": "45.116.56.166, 54.86.50.139",
+            "x-forwarded-host": "intervolute-nonplausible-lelia.ngrok-free.dev",
+            "x-forwarded-proto": "https"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "keyword": "Latest Tech"
+          },
+          "webhookUrl": "https://intervolute-nonplausible-lelia.ngrok-free.dev/webhook-test/blog/generation",
+          "executionMode": "test"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Scrap URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter content": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Filter content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings HuggingFace Inference": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          },
+          {
+            "node": "Supabase Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Markdown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Markdown": {
+      "main": [
+        [
+          {
+            "node": "set_fields_for_google",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare_Request": {
+      "main": [
+        [
+          {
+            "node": "Create & Append to Docs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for trigger": {
+      "main": [
+        [
+          {
+            "node": "Filter Out Keyword",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Keyword Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Out Keyword": {
+      "main": [
+        [
+          {
+            "node": "Fetchs URL",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetchs URL": {
+      "main": [
+        [
+          {
+            "node": "Top 5 URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Top 5 URLs": {
+      "main": [
+        [
+          {
+            "node": "Scrap URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrap URLs": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Keyword Out": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set_fields_for_google": {
+      "main": [
+        [
+          {
+            "node": "Prepare_Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "37671a24-fbf3-4c9c-8f4a-308fc80adf17",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "59c459b1a6099976fed79f9b6ba5f0bfe7b4ace292af3ecabf89a067823e7c89"
+  },
+  "id": "vYaf8xKf1ssvnbt8IQzuZ",
+  "tags": []
+}
