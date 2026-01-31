@@ -167,8 +167,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
       "typeVersion": 1,
       "position": [
-        1824,
-        -1184
+        1920,
+        -1168
       ],
       "id": "2511af63-3e20-423a-9ce6-f0cfc4c0bef8",
       "name": "Groq Chat Model",
@@ -406,6 +406,35 @@
       ],
       "id": "ba0bff72-806e-40bb-873b-bf66628a35a5",
       "name": "Loop for Filter"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0A83AJSNTS",
+          "mode": "id"
+        },
+        "text": "=Hey Team 👋🏻,\n\nHere’s the Generated blog post on {{ $json.name.replace(/\\n/g, \"\") }}. \n\nYou can check it out here:\n🔗 https://docs.google.com/document/d/{{$json.id }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        3312,
+        -1392
+      ],
+      "id": "4bd671b7-7125-44e7-9e71-700668030bf2",
+      "name": "Send Blog to Slack",
+      "webhookId": "2ba0569a-a753-4088-a3ec-d3eb7778087a",
+      "credentials": {
+        "slackApi": {
+          "id": "HtRnvplxGBedCX1J",
+          "name": "Mohit_slack_e2m_TESTBOT"
+        }
+      }
     }
   ],
   "pinData": {
@@ -672,6 +701,17 @@
           }
         ]
       ]
+    },
+    "Create & Append to Docs": {
+      "main": [
+        [
+          {
+            "node": "Send Blog to Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
@@ -679,7 +719,7 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "162970c9-2236-4afb-a831-076355cd1faf",
+  "versionId": "ed8d91ed-ffa7-492d-b72c-28d406e89831",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "59c459b1a6099976fed79f9b6ba5f0bfe7b4ace292af3ecabf89a067823e7c89"
